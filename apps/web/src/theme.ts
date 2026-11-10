@@ -11,6 +11,11 @@ export const antdTheme: ThemeConfig = {
     colorPrimary: '#b4232a',
     colorLink: '#b4232a',
     colorInfo: '#1f4e79',
+    // Alert/Tag 等信息底色由 colorInfo 自动派生，深藏青会派生出灰蓝底；
+    // 显式指定浅色（sasu 副色底）保持「中性提示」观感
+    colorInfoBg: '#f0f5fa',
+    colorInfoBgHover: '#e4eef6',
+    colorInfoBorder: '#cfdeed',
     colorSuccess: '#2e7d5b',
     colorWarning: '#c77700',
     colorError: '#c0392b',
