@@ -209,6 +209,7 @@ if (auth.isLoggedIn) notify.startPolling();
 }
 .topbar {
   height: 60px;
+  background: var(--sasu-bg-card);
   display: flex;
   align-items: center;
   justify-content: space-between;
