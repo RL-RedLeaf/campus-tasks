@@ -89,7 +89,7 @@ if (auth.isLoggedIn) notify.startPolling();
       class="sider"
     >
       <div class="sider-brand" @click="router.push('/')">
-        <span class="brand-dot" />
+        <img class="brand-badge" src="/school-badge.png" alt="上海科技大学附属学校校徽" />
         <span v-if="!collapsed" class="brand-name">校园任务平台</span>
       </div>
       <a-menu mode="inline" :selected-keys="selectedKeys" class="sider-menu">
@@ -164,12 +164,9 @@ if (auth.isLoggedIn) notify.startPolling();
   border-bottom: 1px solid var(--sasu-border);
   flex-shrink: 0;
 }
-.brand-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  background: var(--sasu-color-primary);
-  box-shadow: 0 0 0 3px var(--sasu-color-primary-light-bg);
+.brand-badge {
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
 }
 .brand-name {

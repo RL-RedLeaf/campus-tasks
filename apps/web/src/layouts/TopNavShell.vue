@@ -35,7 +35,7 @@ if (auth.isLoggedIn) notify.startPolling();
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand" @click="router.push('/')">
-          <span class="brand-dot" />
+          <img class="brand-badge" src="/school-badge.png" alt="上海科技大学附属学校校徽" />
           <span class="brand-name">校园任务平台</span>
         </div>
         <nav class="nav">
@@ -128,12 +128,10 @@ if (auth.isLoggedIn) notify.startPolling();
   cursor: pointer;
   white-space: nowrap;
 }
-.brand-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
-  background: var(--sasu-color-primary);
-  box-shadow: 0 0 0 3px var(--sasu-color-primary-light-bg);
+.brand-badge {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
 }
 .brand-name {
   font-size: 16px;

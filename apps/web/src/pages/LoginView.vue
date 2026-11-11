@@ -42,7 +42,7 @@ async function onSubmit(): Promise<void> {
   <div class="login-page">
     <div class="login-panel">
       <div class="login-brand">
-        <span class="brand-dot" />
+        <img class="brand-badge" src="/school-badge.png" alt="上海科技大学附属学校校徽" />
         <span class="brand-name">校园任务平台</span>
       </div>
       <a-card class="login-card">
@@ -83,15 +83,12 @@ async function onSubmit(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 24px;
 }
-.brand-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 5px;
-  background: var(--sasu-color-primary);
-  box-shadow: 0 0 0 4px var(--sasu-color-primary-light-bg);
+.brand-badge {
+  width: 44px;
+  height: 44px;
 }
 .brand-name {
   font-size: 18px;
