@@ -594,9 +594,11 @@ onBeforeUnmount(() => {
 }
 .comment-input {
   margin-top: 12px;
-  display: flex;
+  /* grid：textarea（含计数控件的外层 span）占满剩余宽度，按钮靠右 */
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 12px;
-  align-items: flex-start;
+  align-items: start;
 }
 .btn-gap {
   margin-left: 8px;
