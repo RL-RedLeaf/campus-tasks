@@ -148,7 +148,7 @@ onMounted(() => {
   cursor: pointer;
 }
 .click-table :deep(.ant-table-tbody > tr.ant-table-row:hover > td) {
-  background: var(--sasu-color-primary-light-bg);
+  background: var(--sasu-bg-hover);
 }
 .row-title {
   font-weight: 600;

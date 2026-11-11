@@ -189,7 +189,7 @@ onMounted(() => {
   transition: background 0.15s;
 }
 .noti-item:hover {
-  background: var(--sasu-color-primary-light-bg);
+  background: var(--sasu-bg-hover);
 }
 .noti-main {
   display: flex;

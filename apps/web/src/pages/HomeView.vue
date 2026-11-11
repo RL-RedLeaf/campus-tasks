@@ -143,7 +143,7 @@ onMounted(async () => {
   border-bottom: none;
 }
 .todo-item:hover {
-  background: var(--sasu-color-primary-light-bg);
+  background: var(--sasu-bg-hover);
   color: var(--sasu-color-primary);
 }
 .todo-arrow {
