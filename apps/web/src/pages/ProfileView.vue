@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { message } from '@/composables/feedback';
+import { labelOf } from '@sasu/shared';
 import type { FormInstance } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
 import { useAuthStore } from '@/stores/auth';
@@ -62,7 +63,7 @@ async function onSubmit(): Promise<void> {
       <a-card class="block" title="我的资料">
         <div class="row"><span>姓名</span><b>{{ auth.user?.name }}</b></div>
         <div class="row"><span>学号 / 工号</span><b>{{ auth.user?.username }}</b></div>
-        <div class="row"><span>角色</span><b>{{ auth.user?.role }}</b></div>
+        <div class="row"><span>角色</span><b>{{ labelOf.role(auth.user?.role) }}</b></div>
         <p class="tip">如需修改姓名、班级等信息，请联系管理员。</p>
       </a-card>
     </a-col>
