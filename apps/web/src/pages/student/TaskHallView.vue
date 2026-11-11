@@ -289,15 +289,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  border-radius: var(--sasu-radius-base);
-  background: linear-gradient(135deg, var(--sasu-color-primary-light-bg) 0%, #ffffff 70%);
-  border: 1px solid #f3d9da;
+  padding: 6px 0 20px;
+  margin-bottom: 4px;
 }
 .hall-hero h2 {
   margin: 0 0 4px;
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   color: var(--sasu-text-primary);
 }
 .hall-hero p {
@@ -309,10 +308,11 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 9px 16px;
   background: #fff;
   border: 1px solid var(--sasu-border);
-  border-radius: 999px;
+  border-radius: var(--sasu-radius-pill);
+  box-shadow: var(--sasu-shadow-card);
   color: var(--sasu-text-secondary);
   font-size: 13px;
   white-space: nowrap;
@@ -321,8 +321,9 @@ onBeforeUnmount(() => {
   color: var(--sasu-color-primary);
 }
 .hero-chip b {
-  font-size: 18px;
+  font-size: 17px;
   color: var(--sasu-color-primary);
+  font-variant-numeric: tabular-nums;
 }
 .filter-card {
   margin-bottom: 16px;
@@ -390,8 +391,8 @@ onBeforeUnmount(() => {
 }
 .task-card:hover {
   transform: translateY(-2px);
-  border-color: #eec3c5;
-  box-shadow: 0 6px 16px rgba(180, 35, 42, 0.1);
+  border-color: #e5b9bb;
+  box-shadow: var(--sasu-shadow-card-hover);
 }
 .card-head {
   display: flex;

@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { promptState, settlePrompt } from '@/composables/feedback';
 
-/** 全局输入弹窗单实例（替代 ElMessageBox.prompt），挂在 AppShell 内。 */
+/** 全局输入弹窗单实例（替代 ElMessageBox.prompt），挂在 FeedbackBinder 内。 */
 const input = ref('');
 const inputRef = ref<{ focus: () => void }>();
 const error = ref('');

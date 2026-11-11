@@ -1,10 +1,11 @@
 import type { ThemeConfig } from 'ant-design-vue/es/config-provider/context';
 
 /**
- * Ant Design Vue 主题令牌（承接原 Element Plus CSS 变量覆盖，PRD §13.2/§13.3）。
- * 主色 #B4232A；状态色沿用 sasu 色板；圆角 10px 与 --sasu-radius-base 对齐。
- * colorInfo / colorLink：链接与选中态保持品牌红；Alert info / Tag processing 等
- * 中性信息场景用副色藏青，避免「提示」被误读为「错误」。
+ * Ant Design Vue 全局主题令牌 —— 「清爽现代风」设计语言（2026-11 全站重设计）。
+ * 原则：白底浅灰画布、细边框卡片、克制的品牌红点缀、灰阶层级清晰。
+ * 主色 #B4232A（PRD §13.2）仅用于关键动作/强调数字/激活态。
+ * 组件级外观（表格表头、侧边菜单等）在 styles/tokens.css 与各布局壳的 scoped
+ * 样式里用 CSS 覆盖——antd-vue 4.x 的组件 token 命名与 React 版不一致，CSS 更稳。
  */
 export const antdTheme: ThemeConfig = {
   token: {
@@ -21,7 +22,12 @@ export const antdTheme: ThemeConfig = {
     colorError: '#c0392b',
     colorTextBase: '#1f2329',
     colorBgLayout: '#f7f8fa',
+    colorBorder: '#d5d9e0',
+    colorBorderSecondary: '#e8ecf1',
     borderRadius: 10,
+    borderRadiusLG: 14,
     fontFamily: "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+    boxShadow: '0 6px 24px rgba(16, 24, 40, 0.08)',
+    boxShadowSecondary: '0 2px 8px rgba(16, 24, 40, 0.06)',
   },
 };

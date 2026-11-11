@@ -1,7 +1,7 @@
 /**
- * 设计令牌（PRD §13.2/§13.3/§13.4）。Ant Design Vue 的主题色、圆角、状态色
- * 由 src/theme.ts 的 ConfigProvider token 接管；本文件保留 --sasu-* 供页面
- * scoped 样式与自绘元素使用。main.ts 必须最先挂载本文件。
+ * 设计令牌（PRD §13.2/§13.3/§13.4）——「清爽现代风」。
+ * Ant Design Vue 的主题色、圆角、状态色由 src/theme.ts 的 ConfigProvider token 接管；
+ * 本文件保留 --sasu-* 供页面 scoped 样式与自绘元素使用。main.ts 必须最先挂载本文件。
  * 文案基调：界面主词用「任务 / 积分 / 验收」，不用「悬赏 / 赏金」（§13.5）。
  */
 :root {
@@ -16,13 +16,16 @@
   --sasu-color-danger: #c0392b;
   --sasu-text-primary: #1f2329;
   --sasu-text-secondary: #5c6670;
-  --sasu-border: #e5e8eb;
+  --sasu-text-tertiary: #8a919c;
+  --sasu-border: #e8ecf1;
   --sasu-bg-page: #f7f8fa;
   --sasu-bg-card: #ffffff;
+  --sasu-bg-hover: #f5f6f8;
   --sasu-radius-base: 10px;
   --sasu-radius-card: 14px;
   --sasu-radius-pill: 999px;
-  --sasu-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --sasu-shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --sasu-shadow-card-hover: 0 4px 16px rgba(16, 24, 40, 0.08);
 }
 
 html,
@@ -39,6 +42,29 @@ body {
   color: var(--sasu-text-primary);
   background: var(--sasu-bg-page);
   -webkit-font-smoothing: antialiased;
+}
+
+/* 卡片统一为「细边框 + 极轻投影」的现代观感 */
+.ant-card {
+  box-shadow: var(--sasu-shadow-card);
+}
+
+/* 弹窗圆角与卡片一致 */
+.ant-modal .ant-modal-content {
+  border-radius: var(--sasu-radius-card);
+}
+
+/* 表格：浅色表头 + 更轻的行悬浮（清爽现代风） */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #fafbfc;
+  color: var(--sasu-text-secondary);
+  font-weight: 500;
+}
+.ant-table-wrapper .ant-table-thead > tr > th::before {
+  display: none; /* 去掉表头列分隔线 */
+}
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td {
+  background: var(--sasu-bg-hover);
 }
 
 /* 积分、金额等数字用等宽数字（§13.3） */

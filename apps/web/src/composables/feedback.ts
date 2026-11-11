@@ -6,7 +6,7 @@ import type { ModalFunc, ModalFuncProps } from 'ant-design-vue/es/modal/Modal';
 /**
  * 反馈层统一入口：替代原 Element Plus 的 ElMessage / ElMessageBox。
  * 页面直接 `import { message, confirm, prompt } from '@/composables/feedback'`。
- * AppShell 启动时调用 bindFeedback 把 <a-app> 上下文实例挂到模块级引用上
+ * App.vue 挂载的 FeedbackBinder 调用 bindFeedback 把 <a-app> 上下文实例挂到模块级引用上
  * （toast 颜色跟随 antdTheme）；未绑定时退回 antd 静态 API。
  */
 
@@ -60,7 +60,7 @@ interface ContextFeedback {
 
 let ctx: ContextFeedback | null = null;
 
-/** AppShell 挂载时绑定 a-app 上下文实例（message/confirm 颜色随主题）。 */
+/** FeedbackBinder（App.vue 内）绑定 a-app 上下文实例（message/confirm 颜色随主题）。 */
 export function bindFeedback(api: ContextFeedback): void {
   ctx = api;
 }
@@ -81,7 +81,7 @@ export function confirm(opts: ConfirmOptions): Promise<void> {
 }
 
 // ---------- 全局输入弹窗（替代 ElMessageBox.prompt，AntD 无内置 prompt） ----------
-// 单实例挂载于 AppShell（FeedbackHost.vue），页面经 prompt() 以 Promise 取值。
+// 单实例由 FeedbackBinder 挂载（全路由共享），页面经 prompt() 以 Promise 取值。
 interface PromptState {
   open: boolean;
   title: string;

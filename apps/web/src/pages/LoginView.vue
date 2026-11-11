@@ -39,47 +39,78 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <div class="login-wrap">
-    <a-card class="login-card">
-      <h2 class="login-title">登录</h2>
-      <p class="tip">账号由管理员分配，忘记密码请联系管理员。首次登录需修改初始密码。</p>
-      <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent>
-        <a-form-item label="学号 / 工号" name="username">
-          <a-input v-model:value="form.username" autocomplete="username" placeholder="学号 / 工号" />
-        </a-form-item>
-        <a-form-item label="密码" name="password">
-          <a-input-password
-            v-model:value="form.password"
-            autocomplete="current-password"
-            placeholder="密码"
-          />
-        </a-form-item>
-        <a-button class="submit" type="primary" html-type="submit" :loading="loading" @click="onSubmit">
-          登录
-        </a-button>
-      </a-form>
-    </a-card>
+  <div class="login-page">
+    <div class="login-panel">
+      <div class="login-brand">
+        <span class="brand-dot" />
+        <span class="brand-name">校园任务平台</span>
+      </div>
+      <a-card class="login-card">
+        <h2 class="login-title">登录</h2>
+        <p class="tip">账号由管理员分配，忘记密码请联系管理员。首次登录需修改初始密码。</p>
+        <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent>
+          <a-form-item label="学号 / 工号" name="username">
+            <a-input v-model:value="form.username" autocomplete="username" placeholder="学号 / 工号" />
+          </a-form-item>
+          <a-form-item label="密码" name="password">
+            <a-input-password
+              v-model:value="form.password"
+              autocomplete="current-password"
+              placeholder="密码"
+            />
+          </a-form-item>
+          <a-button class="submit" type="primary" html-type="submit" :loading="loading" @click="onSubmit">
+            登录
+          </a-button>
+        </a-form>
+      </a-card>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.login-wrap {
+.login-page {
+  min-height: 100vh;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding-top: 48px;
+  background: var(--sasu-bg-page);
+}
+.login-panel {
+  width: 380px;
+}
+.login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.brand-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background: var(--sasu-color-primary);
+  box-shadow: 0 0 0 4px var(--sasu-color-primary-light-bg);
+}
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 .login-card {
-  width: 380px;
-  border-radius: var(--sasu-radius-base);
-  box-shadow: var(--sasu-shadow-card);
+  border-radius: var(--sasu-radius-card);
+  box-shadow: 0 2px 12px rgba(16, 24, 40, 0.06);
 }
 .login-title {
   margin: 0 0 4px;
+  font-size: 18px;
 }
 .tip {
   color: var(--sasu-text-secondary);
   font-size: 12px;
   margin-top: 0;
+  margin-bottom: 16px;
 }
 .submit {
   width: 100%;
