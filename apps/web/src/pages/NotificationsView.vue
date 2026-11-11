@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from '@/composables/feedback';
+import { labelOf } from '@sasu/shared';
 import { notificationsApi, type NotificationRow } from '@/api/admin';
 import { useNotificationStore } from '@/stores/notification';
 import type { NormalizedError } from '@/api/http';
@@ -129,7 +130,7 @@ onMounted(() => {
             </div>
             <div class="noti-body">{{ n.body }}</div>
             <div class="noti-foot">
-              <a-tag>{{ n.type }}</a-tag>
+              <span class="type-pill">{{ labelOf.notification(n.type) }}</span>
               <a-button
                 v-if="n.payload?.taskId"
                 type="link"
@@ -228,6 +229,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.type-pill {
+  font-size: 12px;
+  color: var(--sasu-text-tertiary);
+  background: var(--sasu-bg-hover);
+  border: 1px solid var(--sasu-border);
+  border-radius: var(--sasu-radius-pill);
+  padding: 1px 10px;
 }
 .noti-link {
   font-size: 13px;
