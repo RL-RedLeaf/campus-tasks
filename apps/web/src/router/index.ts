@@ -10,6 +10,8 @@ import type { Role } from '@sasu/shared';
  */
 const router = createRouter({
   history: createWebHistory(),
+  // 浏览器前进/后退保留滚动位置；新导航回到顶部
+  scrollBehavior: (_to, _from, savedPosition) => savedPosition ?? { top: 0 },
   routes: [
     { path: '/login', name: 'login', component: () => import('@/pages/LoginView.vue'), meta: { public: true } },
     { path: '/403', name: 'forbidden', component: () => import('@/pages/ForbiddenView.vue'), meta: { public: true } },

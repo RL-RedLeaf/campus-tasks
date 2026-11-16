@@ -35,6 +35,10 @@ export interface PromptOptions {
   placeholder?: string;
   /** 与原 ElMessageBox inputValidator 签名一致：通过返回 true，否则返回错误文案 */
   validate?: (value: string) => true | string;
+  /** 自定义确认按钮文案（如「确认取消任务」），默认「确定」 */
+  okText?: string;
+  /** 危险操作：确认按钮 danger 样式 + 红色感叹号图标（§8.4 不可逆操作） */
+  danger?: boolean;
 }
 
 export function makeConfirm(confirm: ModalFunc): (opts: ConfirmOptions) => Promise<void> {
@@ -88,6 +92,8 @@ interface PromptState {
   message: string;
   placeholder: string;
   validate: PromptOptions['validate'];
+  okText: string;
+  danger: boolean;
 }
 
 export const promptState = reactive<PromptState>({
@@ -96,6 +102,8 @@ export const promptState = reactive<PromptState>({
   message: '',
   placeholder: '',
   validate: undefined,
+  okText: '确定',
+  danger: false,
 });
 
 let promptResolve: ((value: string) => void) | null = null;
@@ -108,6 +116,8 @@ export function prompt(opts: PromptOptions): Promise<string> {
     message: opts.message ?? '',
     placeholder: opts.placeholder ?? '',
     validate: opts.validate,
+    okText: opts.okText ?? '确定',
+    danger: opts.danger ?? false,
   });
   return new Promise((resolve, reject) => {
     promptResolve = resolve;

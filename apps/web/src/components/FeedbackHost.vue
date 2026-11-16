@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { ExclamationCircleFilled } from '@ant-design/icons-vue';
 import { promptState, settlePrompt } from '@/composables/feedback';
 
 /** 全局输入弹窗单实例（替代 ElMessageBox.prompt），挂在 FeedbackBinder 内。 */
@@ -40,24 +41,42 @@ function onCancel(): void {
     :title="promptState.title"
     :width="440"
     :mask-closable="false"
-    ok-text="确定"
+    :ok-text="promptState.okText"
+    :ok-button-props="{ danger: promptState.danger }"
     cancel-text="取消"
     @ok="onOk"
     @cancel="onCancel"
   >
+    <template #title>
+      <span class="prompt-title-wrap">
+        <ExclamationCircleFilled v-if="promptState.danger" class="prompt-danger-icon" />
+        {{ promptState.title }}
+      </span>
+    </template>
     <p v-if="promptState.message" class="prompt-message">{{ promptState.message }}</p>
     <a-input
       ref="inputRef"
       v-model:value="input"
       :placeholder="promptState.placeholder"
       :status="error ? 'error' : ''"
+      :aria-label="promptState.title"
+      :aria-invalid="error ? 'true' : undefined"
+      aria-describedby="prompt-error-text"
       @press-enter="onOk"
     />
-    <p v-if="error" class="prompt-error">{{ error }}</p>
+    <p v-if="error" id="prompt-error-text" class="prompt-error" role="alert">{{ error }}</p>
   </a-modal>
 </template>
 
 <style scoped>
+.prompt-title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.prompt-danger-icon {
+  color: var(--sasu-color-danger);
+}
 .prompt-message {
   color: var(--sasu-text-secondary);
   margin: 0 0 8px;

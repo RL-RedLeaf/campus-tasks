@@ -16,11 +16,17 @@
   --sasu-color-danger: #c0392b;
   --sasu-text-primary: #1f2329;
   --sasu-text-secondary: #5c6670;
-  --sasu-text-tertiary: #8a919c;
+  /* 次要辅助文字：白底对比度 ≥ 4.5:1（WCAG AA），大量用于 12px 小字 */
+  --sasu-text-tertiary: #6b7280;
   --sasu-border: #e8ecf1;
   --sasu-bg-page: #f7f8fa;
   --sasu-bg-card: #ffffff;
   --sasu-bg-hover: #f5f6f8;
+  /* 状态语义底色 / 边框 / 点色（避免页面散落硬编码 hex） */
+  --sasu-color-danger-light-bg: #fdeceb;
+  --sasu-color-primary-light-border: #e5b9bb;
+  --sasu-color-gradient-end: #d96c5f;
+  --sasu-color-muted-dot: #b9c0c9;
   --sasu-radius-base: 10px;
   --sasu-radius-card: 14px;
   --sasu-radius-pill: 999px;
@@ -72,6 +78,19 @@ body {
 .ant-table .num,
 .ant-table-cell.num {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * 键盘可达性（WCAG 2.4.7）：自绘的可点击卡片/行加 tabindex="0" + .sasu-keyable，
+ * 键盘聚焦时显示主色外框。antd 组件自身有 focus 样式，不在此覆盖。
+ */
+.sasu-keyable:focus-visible {
+  outline: 2px solid var(--sasu-color-primary);
+  outline-offset: 2px;
+  border-radius: var(--sasu-radius-base);
+}
+.sasu-keyable:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /*
