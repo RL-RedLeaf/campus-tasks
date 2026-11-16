@@ -38,10 +38,11 @@ export class JobsService implements OnApplicationBootstrap, OnModuleDestroy {
 
   private async withLock(name: string, fn: () => Promise<void>): Promise<void> {
     try {
-      const locked = await this.prisma.$queryRawUnsafe<{ lock: number }[]>(
-        `SELECT GET_LOCK('job:${name}', 0) AS lock`,
+      // 注意：lock 是 MySQL 保留字，别名不能用 AS lock（曾导致所有 cron 作业静默失败）
+      const locked = await this.prisma.$queryRawUnsafe<{ acquired: number }[]>(
+        `SELECT GET_LOCK('job:${name}', 0) AS acquired`,
       );
-      if (!locked[0]?.lock) return;
+      if (!locked[0]?.acquired) return;
       try {
         await fn();
       } finally {
