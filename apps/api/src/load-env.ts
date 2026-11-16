@@ -15,3 +15,7 @@ export function loadDotenv(): void {
     }
   }
 }
+
+// main.ts 以副作用方式 import 本模块（import './load-env'），
+// 必须在模块加载时自动执行，否则 .env 永远不会被加载（此前仅导出未调用，是死代码）。
+loadDotenv();
