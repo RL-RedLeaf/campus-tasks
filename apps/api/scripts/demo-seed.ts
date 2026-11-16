@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * 演示数据（可直接登录体验，不走强制改密）：
  * 需要先 reset 数据库（drop → migrate → seed）且 api 正在运行（默认 http://localhost:3000）。

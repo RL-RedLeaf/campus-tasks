@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { confirm, message, prompt } from '@/composables/feedback';
+import { message, prompt } from '@/composables/feedback';
 import type { FormInstance } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
 import type { NormalizedError } from '@/api/http';

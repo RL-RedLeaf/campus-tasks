@@ -225,7 +225,7 @@ onMounted(async () => {
       </a-row>
       <a-form-item>
         <a-button type="primary" :loading="loading" html-type="submit">提交任务</a-button>
-        <a-button class="btn-cancel" @click="router.back()">取消</a-button>
+        <a-button class="btn-cancel" @click="onCancel">取消</a-button>
         <span class="tip">提交后进入「待定价」，管理员设定赏金后学生才可见</span>
       </a-form-item>
     </a-form>

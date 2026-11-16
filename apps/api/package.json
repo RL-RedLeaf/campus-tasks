@@ -9,7 +9,7 @@
     "build": "pnpm --filter @sasu/shared build && prisma generate && nest build",
     "prisma:generate": "prisma generate",
     "typecheck": "pnpm --filter @sasu/shared build && prisma generate && tsc -p tsconfig.json --noEmit",
-    "test": "pnpm --filter @sasu/shared build && prisma generate && jest",
+    "test": "pnpm --filter @sasu/shared build && prisma generate && node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:demo": "tsx scripts/demo-seed.ts",

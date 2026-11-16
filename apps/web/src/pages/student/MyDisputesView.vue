@@ -105,6 +105,8 @@ async function onCreate(): Promise<void> {
     submitting.value = false;
   }
 }
+
+onMounted(() => void load());
 </script>
 
 <template>

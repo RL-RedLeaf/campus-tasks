@@ -110,8 +110,8 @@ onMounted(() => {
   <a-card class="block">
     <div class="toolbar">
       <a-tabs v-model:active-key="tab" class="toolbar-tabs" @change="onTabChange">
-        <a-tab-pane :tab="`未读（${unread}）`" key="UNREAD" />
-        <a-tab-pane tab="全部" key="ALL" />
+        <a-tab-pane key="UNREAD" :tab="`未读（${unread}）`" />
+        <a-tab-pane key="ALL" tab="全部" />
       </a-tabs>
       <a-button :disabled="unread === 0" :loading="markingAll" @click="markAllRead">全部已读</a-button>
     </div>
