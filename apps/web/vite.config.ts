@@ -1,16 +1,16 @@
 import { fileURLToPath, URL } from 'node:url';
 import vue from '@vitejs/plugin-vue';
 import AutoImport from 'unplugin-auto-import/vite';
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers';
 import Components from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [
     vue(),
-    // Element Plus 按需引入（PRD §13.4：禁止全量注册）
-    AutoImport({ resolvers: [ElementPlusResolver()] }),
-    Components({ resolvers: [ElementPlusResolver()] }),
+    // Ant Design Vue 按需引入（PRD §13.4：禁止全量注册）；v4 为 CSS-in-JS，importStyle 必须为 false
+    AutoImport({ resolvers: [AntDesignVueResolver({ importStyle: false })] }),
+    Components({ resolvers: [AntDesignVueResolver({ importStyle: false })] }),
   ],
   resolve: {
     alias: {

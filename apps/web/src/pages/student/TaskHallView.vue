@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { Clock, Location, User, Search, Refresh, Coin } from '@element-plus/icons-vue';
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { message } from '@/composables/feedback';
+import {
+  ClockCircleOutlined,
+  EnvironmentOutlined,
+  UserOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  GoldOutlined,
+} from '@ant-design/icons-vue';
 import { categoriesApi, type CategoryRow } from '@/api/admin';
 import { tasksApi, type PageData, type TaskSummary } from '@/api/tasks';
 import type { NormalizedError } from '@/api/http';
 import EmptyState from '@/components/EmptyState.vue';
 import StatusTag from '@/components/StatusTag.vue';
+import AppPagination from '@/components/AppPagination.vue';
 import { useAuthStore } from '@/stores/auth';
 import { pointsApi } from '@/api/points';
 
@@ -22,12 +30,14 @@ function teacherLabel(name?: string): string {
 }
 
 const router = useRouter();
+const route = useRoute();
 
 const categories = ref<CategoryRow[]>([]);
 const items = ref<TaskSummary[]>([]);
 const total = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
 const filters = reactive({
   categoryId: undefined as number | undefined,
   status: undefined as string | undefined,
@@ -48,7 +58,7 @@ const statusOptions = [
 const sortOptions = [
   { value: 'latest', label: '最新发布' },
   { value: 'deadline', label: '即将截止' },
-  { value: 'reward', label: '赏金最高' },
+  { value: 'reward', label: '积分最高' },
 ];
 
 /** 倒计时用响应式时钟（30s 刷新一次） */
@@ -89,20 +99,62 @@ function buildParams(): Record<string, unknown> {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data: PageData<TaskSummary> = await tasksApi.hall(buildParams());
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
-    ElMessage.error((e as NormalizedError).friendlyMessage ?? '加载失败');
+    loadError.value = true;
+    message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
   }
 }
 
+// ---------- 筛选/页码与 URL query 双向同步（深链可分享） ----------
+function queryFromState(): Record<string, string> {
+  const q: Record<string, string> = { page: String(page.value), orderBy: filters.orderBy };
+  if (filters.categoryId) q.categoryId = String(filters.categoryId);
+  if (filters.status) q.status = filters.status;
+  if (filters.minReward !== undefined && filters.minReward !== null) q.minReward = String(filters.minReward);
+  if (filters.maxReward !== undefined && filters.maxReward !== null) q.maxReward = String(filters.maxReward);
+  const kw = filters.keyword.trim();
+  if (kw) q.keyword = kw;
+  return q;
+}
+function applyQuery(): void {
+  const q = route.query;
+  const num = (v: unknown): number | undefined => {
+    const n = Number(v);
+    return v !== undefined && v !== null && v !== '' && Number.isFinite(n) && n > 0 ? n : undefined;
+  };
+  page.value = num(q.page) ?? 1;
+  filters.categoryId = num(q.categoryId);
+  filters.status = typeof q.status === 'string' && statusOptions.some((o) => o.value === q.status) ? q.status : undefined;
+  filters.minReward = num(q.minReward);
+  filters.maxReward = num(q.maxReward);
+  filters.keyword = typeof q.keyword === 'string' ? q.keyword : '';
+  filters.orderBy = typeof q.orderBy === 'string' && sortOptions.some((o) => o.value === q.orderBy) ? q.orderBy : 'latest';
+}
+function isSameQuery(a: Record<string, unknown>, b: Record<string, string>): boolean {
+  const keys = Object.keys(b);
+  if (keys.length !== Object.keys(a).length) return false;
+  return keys.every((k) => String(a[k] ?? '') === b[k]);
+}
+/** 状态写回 URL；query 无变化时直接加载，避免 watch 触发重复请求 */
+async function syncQueryAndLoad(): Promise<void> {
+  const next = queryFromState();
+  if (isSameQuery(route.query, next)) {
+    await load();
+    return;
+  }
+  await router.replace({ query: next }); // watch(route.query) 会负责还原状态并加载
+}
+
 function search(): void {
   page.value = 1;
-  void load();
+  void syncQueryAndLoad();
 }
 function reset(): void {
   filters.categoryId = undefined;
@@ -115,7 +167,9 @@ function reset(): void {
 }
 function changePage(p: number): void {
   page.value = p;
-  void load();
+  void syncQueryAndLoad();
+  // 翻页后把页面主体滚回顶部，避免用户停留在长列表中部
+  document.querySelector('.page')?.scrollIntoView({ behavior: 'smooth' });
 }
 function openDetail(id: string): void {
   void router.push(`/tasks/${id}`);
@@ -131,6 +185,7 @@ onMounted(async () => {
   timer = setInterval(() => {
     now.value = Date.now();
   }, 30_000);
+  applyQuery(); // 从 URL query 还原筛选与页码（支持分享深链）
   try {
     const r = await categoriesApi.list();
     categories.value = r.items;
@@ -142,6 +197,14 @@ onMounted(async () => {
   }
   await load();
 });
+// 浏览器前进/后退或外部修改 query 时同步还原并重新加载（syncQueryAndLoad 写回相同 query 不会重复触发）
+watch(
+  () => route.query,
+  () => {
+    applyQuery();
+    void load();
+  },
+);
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
 });
@@ -154,31 +217,36 @@ onBeforeUnmount(() => {
       <p>先到先得接单，按时提交交付物，验收通过即刻获得积分</p>
     </div>
     <div v-if="auth.role === 'STUDENT' && myPoints" class="hero-chip">
-      <el-icon><Coin /></el-icon>
+      <GoldOutlined class="hero-chip-icon" />
       <span>我的可用积分</span>
       <b class="num">{{ myPoints.balance }}</b>
     </div>
   </section>
 
-  <el-card shadow="never" class="filter-card">
+  <a-card class="filter-card">
     <div class="filter-bar">
-      <el-select
-        v-model="filters.categoryId"
+      <a-select
+        v-model:value="filters.categoryId"
         placeholder="全部分类"
-        clearable
-        filterable
+        allow-clear
+        show-search
+        option-filter-prop="label"
         class="w-category"
+        :options="categories.map((c) => ({ label: c.name, value: Number(c.id) }))"
         @change="search"
-      >
-        <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="Number(c.id)" />
-      </el-select>
-      <el-select v-model="filters.status" placeholder="全部状态" clearable class="w-status" @change="search">
-        <el-option v-for="s in statusOptions" :key="s.value" :label="s.label" :value="s.value" />
-      </el-select>
+      />
+      <a-select
+        v-model:value="filters.status"
+        placeholder="全部状态"
+        allow-clear
+        class="w-status"
+        :options="statusOptions"
+        @change="search"
+      />
       <div class="reward-range">
-        <span class="range-label">赏金</span>
-        <el-input-number
-          v-model="filters.minReward"
+        <span class="range-label">积分</span>
+        <a-input-number
+          v-model:value="filters.minReward"
           :min="1"
           :max="9999"
           :controls="false"
@@ -186,8 +254,8 @@ onBeforeUnmount(() => {
           class="w-num"
         />
         <span class="range-sep">—</span>
-        <el-input-number
-          v-model="filters.maxReward"
+        <a-input-number
+          v-model:value="filters.maxReward"
           :min="1"
           :max="9999"
           :controls="false"
@@ -195,67 +263,87 @@ onBeforeUnmount(() => {
           class="w-num"
         />
       </div>
-      <el-select v-model="filters.orderBy" class="w-sort" @change="search">
-        <el-option v-for="s in sortOptions" :key="s.value" :label="s.label" :value="s.value" />
-      </el-select>
-      <el-input
-        v-model="filters.keyword"
+      <a-select
+        v-model:value="filters.orderBy"
+        class="w-sort"
+        :options="sortOptions"
+        @change="search"
+      />
+      <a-input
+        v-model:value="filters.keyword"
         placeholder="搜索任务标题 / 描述"
-        clearable
+        allow-clear
         class="w-keyword"
-        :prefix-icon="Search"
         @keyup.enter="search"
         @clear="search"
-      />
-      <el-button type="primary" :icon="Search" @click="search">搜索</el-button>
-      <el-button :icon="Refresh" @click="reset">重置</el-button>
+      >
+        <template #prefix><SearchOutlined class="search-prefix" /></template>
+      </a-input>
+      <a-button type="primary" @click="search">
+        <template #icon><SearchOutlined /></template>
+        搜索
+      </a-button>
+      <a-button @click="reset">
+        <template #icon><ReloadOutlined /></template>
+        重置
+      </a-button>
     </div>
-  </el-card>
+  </a-card>
 
-  <div v-loading="loading" class="list-area">
-    <div v-if="items.length > 0" class="cards">
-      <article v-for="t in items" :key="t.id" class="task-card" @click="openDetail(t.id)">
-        <header class="card-head">
-          <span class="cat">{{ t.category?.name ?? '未分类' }}</span>
-          <StatusTag :status="t.status" />
-        </header>
-        <h3 class="title">{{ t.title }}</h3>
-        <div class="meta">
-          <span class="meta-item"><el-icon><User /></el-icon>{{ teacherLabel(t.teacher?.name) }}</span>
-          <span v-if="t.location" class="meta-item"><el-icon><Location /></el-icon>{{ t.location }}</span>
-        </div>
-        <div class="quota-line">
-          <div class="quota-bar">
-            <div class="quota-fill" :style="{ width: quotaPercent(t) + '%' }" />
+  <a-spin :spinning="loading">
+    <div class="list-area">
+      <div v-if="items.length > 0" class="cards">
+        <article
+          v-for="t in items"
+          :key="t.id"
+          class="task-card sasu-keyable"
+          role="link"
+          tabindex="0"
+          @click="openDetail(t.id)"
+          @keydown.enter.prevent="openDetail(t.id)"
+          @keydown.space.prevent="openDetail(t.id)"
+        >
+          <header class="card-head">
+            <span class="cat">{{ t.category?.name ?? '未分类' }}</span>
+            <StatusTag :status="t.status" />
+          </header>
+          <h3 class="title">{{ t.title }}</h3>
+          <div class="meta">
+            <span class="meta-item"><UserOutlined />{{ teacherLabel(t.teacher?.name) }}</span>
+            <span v-if="t.location" class="meta-item"><EnvironmentOutlined />{{ t.location }}</span>
           </div>
-          <span class="quota-text">
-            已报 <b>{{ t.headcount - (t.remaining ?? t.headcount - t.filledCount) }}</b> / {{ t.headcount }} 人
-          </span>
-        </div>
-        <footer class="card-foot">
-          <div class="reward">
-            <span class="reward-num num">{{ t.rewardPerPerson ?? '—' }}</span>
-            <span class="reward-unit">积分/人</span>
+          <div class="quota-line">
+            <div class="quota-bar">
+              <div class="quota-fill" :style="{ width: quotaPercent(t) + '%' }" />
+            </div>
+            <span class="quota-text">
+              已报 <b>{{ t.headcount - (t.remaining ?? t.headcount - t.filledCount) }}</b> / {{ t.headcount }} 人
+            </span>
           </div>
-          <span class="deadline" :class="{ urgent: isUrgent(t.deadlineAt) }">
-            <el-icon><Clock /></el-icon>
-            {{ remainingText(t.deadlineAt) }}
-          </span>
-        </footer>
-      </article>
+          <footer class="card-foot">
+            <div class="reward">
+              <span class="reward-num num">{{ t.rewardPerPerson ?? '—' }}</span>
+              <span class="reward-unit">积分/人</span>
+            </div>
+            <span class="deadline" :class="{ urgent: isUrgent(t.deadlineAt) }">
+              <ClockCircleOutlined />
+              {{ isUrgent(t.deadlineAt) ? '即将截止 · ' : '' }}{{ remainingText(t.deadlineAt) }}
+            </span>
+          </footer>
+        </article>
+      </div>
+      <EmptyState v-else-if="loadError" error @retry="load" />
+      <EmptyState v-else-if="!loading" description="暂无符合条件的任务，换个筛选条件试试" />
     </div>
-    <EmptyState v-else-if="!loading" description="暂无符合条件的任务，换个筛选条件试试" />
-  </div>
+  </a-spin>
 
   <div class="pager">
-    <el-pagination
-      v-model:current-page="page"
+    <AppPagination
+      v-model:page="page"
       :page-size="PAGE_SIZE"
       :total="total"
-      layout="total, prev, pager, next"
-      background
       hide-on-single-page
-      @current-change="changePage"
+      @change="changePage"
     />
   </div>
 </template>
@@ -266,15 +354,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  border-radius: var(--sasu-radius-base);
-  background: linear-gradient(135deg, var(--sasu-color-primary-light-bg) 0%, #ffffff 70%);
-  border: 1px solid #f3d9da;
+  padding: 6px 0 20px;
+  margin-bottom: 4px;
 }
 .hall-hero h2 {
   margin: 0 0 4px;
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   color: var(--sasu-text-primary);
 }
 .hall-hero p {
@@ -286,20 +373,22 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background: #fff;
+  padding: 9px 16px;
+  background: var(--sasu-bg-card);
   border: 1px solid var(--sasu-border);
-  border-radius: 999px;
+  border-radius: var(--sasu-radius-pill);
+  box-shadow: var(--sasu-shadow-card);
   color: var(--sasu-text-secondary);
   font-size: 13px;
   white-space: nowrap;
 }
-.hero-chip .el-icon {
+.hero-chip-icon {
   color: var(--sasu-color-primary);
 }
 .hero-chip b {
-  font-size: 18px;
+  font-size: 17px;
   color: var(--sasu-color-primary);
+  font-variant-numeric: tabular-nums;
 }
 .filter-card {
   margin-bottom: 16px;
@@ -326,6 +415,9 @@ onBeforeUnmount(() => {
 }
 .w-num {
   width: 90px;
+}
+.search-prefix {
+  color: var(--sasu-text-secondary);
 }
 .reward-range {
   display: flex;
@@ -364,8 +456,8 @@ onBeforeUnmount(() => {
 }
 .task-card:hover {
   transform: translateY(-2px);
-  border-color: #eec3c5;
-  box-shadow: 0 6px 16px rgba(180, 35, 42, 0.1);
+  border-color: var(--sasu-color-primary-light-border);
+  box-shadow: var(--sasu-shadow-card-hover);
 }
 .card-head {
   display: flex;
@@ -403,7 +495,7 @@ onBeforeUnmount(() => {
   color: var(--sasu-text-secondary);
   font-size: 13px;
 }
-.meta-item .el-icon {
+.meta-item .anticon {
   font-size: 14px;
 }
 .quota-line {
@@ -422,7 +514,7 @@ onBeforeUnmount(() => {
 .quota-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--sasu-color-primary), #d96c5f);
+  background: linear-gradient(90deg, var(--sasu-color-primary), var(--sasu-color-gradient-end));
   transition: width 0.3s ease;
 }
 .quota-text {
@@ -459,7 +551,7 @@ onBeforeUnmount(() => {
 }
 .deadline.urgent {
   color: var(--sasu-color-danger);
-  background: var(--sasu-color-primary-light-bg);
+  background: var(--sasu-color-danger-light-bg);
   padding: 2px 10px;
   border-radius: 999px;
 }
@@ -467,5 +559,16 @@ onBeforeUnmount(() => {
   margin-top: 16px;
   display: flex;
   justify-content: center;
+}
+@media (max-width: 767px) {
+  /* 窄屏单列卡片，避免 minmax(320px, 1fr) 在 <768px 时仍挤出两列 */
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .hall-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 </style>

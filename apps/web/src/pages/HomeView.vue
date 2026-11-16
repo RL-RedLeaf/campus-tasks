@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { ArrowRight } from '@element-plus/icons-vue';
+import { ArrowRightOutlined } from '@ant-design/icons-vue';
 import { communityApi } from '@/api/admin';
 import { pointsApi } from '@/api/points';
 import { useAuthStore } from '@/stores/auth';
@@ -9,7 +8,6 @@ import PageHeader from '@/components/PageHeader.vue';
 import PointsNum from '@/components/PointsNum.vue';
 
 const auth = useAuthStore();
-const router = useRouter();
 const announcements = ref<{ id: string; title: string; content: string; publishedAt: string | null }[]>([]);
 const points = ref<{ balance: number; frozen: number; penaltyDebt: number } | null>(null);
 
@@ -49,10 +47,9 @@ onMounted(async () => {
 
 <template>
   <PageHeader title="首页" :subtitle="`你好，${auth.user?.name ?? ''}`" />
-  <el-row :gutter="16">
-    <el-col :span="isStudent ? 16 : 24">
-      <el-card shadow="never" class="block">
-        <template #header>公告</template>
+  <a-row :gutter="16">
+    <a-col :xs="24" :sm="isStudent ? 16 : 24">
+      <a-card class="block" title="公告">
         <template v-if="announcements.length">
           <div v-for="a in announcements" :key="a.id" class="announce">
             <div class="announce-title">{{ a.title }}</div>
@@ -61,11 +58,10 @@ onMounted(async () => {
           </div>
         </template>
         <span v-else class="muted">暂无公告</span>
-      </el-card>
-    </el-col>
-    <el-col v-if="isStudent" :span="8">
-      <el-card shadow="never" class="block">
-        <template #header>我的积分</template>
+      </a-card>
+    </a-col>
+    <a-col v-if="isStudent" :xs="24" :sm="8">
+      <a-card class="block" title="我的积分">
         <div class="point-line">
           <span>可用余额</span>
           <PointsNum :value="points?.balance ?? 0" suffix="分" />
@@ -78,18 +74,19 @@ onMounted(async () => {
           <span>欠分</span>
           <PointsNum :value="points?.penaltyDebt ?? 0" suffix="分" />
         </div>
-      </el-card>
-    </el-col>
-  </el-row>
-  <el-card shadow="never" class="block">
-    <template #header>我的待办</template>
+      </a-card>
+    </a-col>
+  </a-row>
+  <a-card class="block" title="我的待办">
     <ul class="todo-list">
-      <li v-for="t in todos" :key="t.to" class="todo-item" @click="router.push(t.to)">
-        <span class="todo-label">{{ t.label }}</span>
-        <el-icon class="todo-arrow"><ArrowRight /></el-icon>
+      <li v-for="t in todos" :key="t.to">
+        <RouterLink class="todo-item sasu-keyable" :to="t.to">
+          <span class="todo-label">{{ t.label }}</span>
+          <ArrowRightOutlined class="todo-arrow" />
+        </RouterLink>
       </li>
     </ul>
-  </el-card>
+  </a-card>
 </template>
 
 <style scoped>
@@ -140,13 +137,14 @@ onMounted(async () => {
   cursor: pointer;
   color: var(--sasu-text-primary);
   font-size: 14px;
+  text-decoration: none;
   transition: background 0.15s ease;
 }
-.todo-item:last-child {
+.todo-list li:last-child .todo-item {
   border-bottom: none;
 }
 .todo-item:hover {
-  background: var(--sasu-color-primary-light-bg);
+  background: var(--sasu-bg-hover);
   color: var(--sasu-color-primary);
 }
 .todo-arrow {

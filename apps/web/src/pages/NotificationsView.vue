@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { message } from '@/composables/feedback';
+import { labelOf } from '@sasu/shared';
 import { notificationsApi, type NotificationRow } from '@/api/admin';
 import { useNotificationStore } from '@/stores/notification';
 import type { NormalizedError } from '@/api/http';
@@ -18,6 +19,7 @@ const total = ref(0);
 const unread = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
 const markingAll = ref(false);
 
 const isUnreadTab = computed(() => tab.value === 'UNREAD');
@@ -28,6 +30,7 @@ function fmtTime(v: string | null | undefined): string {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const params: Record<string, unknown> = { page: page.value, pageSize: PAGE_SIZE };
     if (isUnreadTab.value) params.unreadOnly = '1';
@@ -37,7 +40,8 @@ async function load(): Promise<void> {
     unread.value = data.unread;
     notifyStore.unread = data.unread;
   } catch (e) {
-    ElMessage.error((e as NormalizedError).friendlyMessage ?? '加载失败');
+    loadError.value = true;
+    message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
   }
@@ -87,10 +91,10 @@ async function markAllRead(): Promise<void> {
   markingAll.value = true;
   try {
     await notificationsApi.markAllRead();
-    ElMessage.success('已全部标记为已读');
+    message.success('已全部标记为已读');
     await load();
   } catch (e) {
-    ElMessage.error((e as NormalizedError).friendlyMessage ?? '操作失败');
+    message.error((e as NormalizedError).friendlyMessage ?? '操作失败');
   } finally {
     markingAll.value = false;
   }
@@ -103,62 +107,72 @@ onMounted(() => {
 
 <template>
   <PageHeader title="站内通知" subtitle="任务接单、验收、驳回、结算与提现等进展都会在这里提醒你" />
-  <el-card shadow="never" class="block">
+  <a-card class="block">
     <div class="toolbar">
-      <el-tabs v-model="tab" class="toolbar-tabs" @tab-change="onTabChange">
-        <el-tab-pane :label="`未读（${unread}）`" name="UNREAD" />
-        <el-tab-pane label="全部" name="ALL" />
-      </el-tabs>
-      <el-button :disabled="unread === 0" :loading="markingAll" @click="markAllRead">全部已读</el-button>
+      <a-tabs v-model:active-key="tab" class="toolbar-tabs" @change="onTabChange">
+        <a-tab-pane :tab="`未读（${unread}）`" key="UNREAD" />
+        <a-tab-pane tab="全部" key="ALL" />
+      </a-tabs>
+      <a-button :disabled="unread === 0" :loading="markingAll" @click="markAllRead">全部已读</a-button>
     </div>
 
-    <div v-loading="loading" class="list-area">
-      <div v-if="items.length > 0" class="noti-list">
-        <div
-          v-for="n in items"
-          :key="n.id"
-          class="noti-item"
-          :class="{ unread: !n.readAt }"
-          @click="open(n)"
-        >
-          <div class="noti-main">
-            <span v-if="!n.readAt" class="dot" />
-            <span class="noti-title" :class="{ bold: !n.readAt }">{{ n.title }}</span>
-            <span class="noti-time">{{ fmtTime(n.createdAt) }}</span>
-          </div>
-          <div class="noti-body">{{ n.body }}</div>
-          <div class="noti-foot">
-            <el-tag size="small" effect="plain" type="info">{{ n.type }}</el-tag>
-            <el-link
-              v-if="n.payload?.taskId"
-              type="primary"
-              :underline="false"
-              class="noti-link"
-              @click.stop="goTask(n)"
-            >
-              查看任务 →
-            </el-link>
+    <a-spin :spinning="loading">
+      <div class="list-area">
+        <div v-if="items.length > 0" class="noti-list">
+          <div
+            v-for="n in items"
+            :key="n.id"
+            class="noti-item sasu-keyable"
+            :class="{ unread: !n.readAt }"
+            role="button"
+            tabindex="0"
+            @click="open(n)"
+            @keydown.enter.self.prevent="open(n)"
+            @keydown.space.self.prevent="open(n)"
+          >
+            <div class="noti-main">
+              <span v-if="!n.readAt" class="dot" />
+              <span class="noti-title" :class="{ bold: !n.readAt }">{{ n.title }}</span>
+              <span class="noti-time">{{ fmtTime(n.createdAt) }}</span>
+            </div>
+            <div class="noti-body">{{ n.body }}</div>
+            <div class="noti-foot">
+              <span class="type-pill">{{ labelOf.notification(n.type) }}</span>
+              <a-button
+                v-if="n.payload?.taskId"
+                type="link"
+                size="small"
+                class="noti-link"
+                @click.stop="goTask(n)"
+              >
+                查看任务 →
+              </a-button>
+            </div>
           </div>
         </div>
+        <EmptyState
+          v-else-if="loadError"
+          error
+          @retry="load"
+        />
+        <EmptyState
+          v-else-if="!loading"
+          :description="isUnreadTab ? '没有未读通知' : '还没有收到通知'"
+        />
       </div>
-      <EmptyState
-        v-else-if="!loading"
-        :description="isUnreadTab ? '没有未读通知' : '还没有收到通知'"
-      />
-    </div>
+    </a-spin>
 
     <div class="pager">
-      <el-pagination
-        v-model:current-page="page"
+      <a-pagination
+        v-model:current="page"
         :page-size="PAGE_SIZE"
         :total="total"
-        layout="total, prev, pager, next"
-        background
-        hide-on-single-page
-        @current-change="changePage"
+        :show-size-changer="false"
+        :hide-on-single-page="true"
+        @change="changePage"
       />
     </div>
-  </el-card>
+  </a-card>
 </template>
 
 <style scoped>
@@ -174,7 +188,6 @@ onMounted(() => {
 }
 .toolbar-tabs {
   flex: 1;
-  margin-bottom: -20px;
 }
 .list-area {
   min-height: 160px;
@@ -189,7 +202,7 @@ onMounted(() => {
   transition: background 0.15s;
 }
 .noti-item:hover {
-  background: var(--sasu-color-primary-light-bg);
+  background: var(--sasu-bg-hover);
 }
 .noti-main {
   display: flex;
@@ -229,12 +242,34 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
 }
+.type-pill {
+  font-size: 12px;
+  color: var(--sasu-text-tertiary);
+  background: var(--sasu-bg-hover);
+  border: 1px solid var(--sasu-border);
+  border-radius: var(--sasu-radius-pill);
+  padding: 1px 10px;
+}
 .noti-link {
   font-size: 13px;
+  padding: 0;
 }
 .pager {
   margin-top: 16px;
   display: flex;
   justify-content: center;
+}
+@media (max-width: 767px) {
+  /* 窄屏：标题与时间允许换行，正文缩进收回，避免时间戳挤压标题 */
+  .noti-main {
+    flex-wrap: wrap;
+  }
+  .noti-time {
+    margin-left: 0;
+  }
+  .noti-body,
+  .noti-foot {
+    padding-left: 0;
+  }
 }
 </style>

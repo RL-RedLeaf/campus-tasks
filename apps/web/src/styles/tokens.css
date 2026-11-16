@@ -1,6 +1,7 @@
 /**
- * 设计令牌 + Element Plus 主题覆盖（PRD §13.2/§13.3/§13.4）。
- * 通过 CSS 变量覆盖主题，不引 SCSS 全量编译；main.ts 必须最先挂载本文件。
+ * 设计令牌（PRD §13.2/§13.3/§13.4）——「清爽现代风」。
+ * Ant Design Vue 的主题色、圆角、状态色由 src/theme.ts 的 ConfigProvider token 接管；
+ * 本文件保留 --sasu-* 供页面 scoped 样式与自绘元素使用。main.ts 必须最先挂载本文件。
  * 文案基调：界面主词用「任务 / 积分 / 验收」，不用「悬赏 / 赏金」（§13.5）。
  */
 :root {
@@ -15,34 +16,22 @@
   --sasu-color-danger: #c0392b;
   --sasu-text-primary: #1f2329;
   --sasu-text-secondary: #5c6670;
-  --sasu-border: #e5e8eb;
+  /* 次要辅助文字：白底对比度 ≥ 4.5:1（WCAG AA），大量用于 12px 小字 */
+  --sasu-text-tertiary: #6b7280;
+  --sasu-border: #e8ecf1;
   --sasu-bg-page: #f7f8fa;
   --sasu-bg-card: #ffffff;
+  --sasu-bg-hover: #f5f6f8;
+  /* 状态语义底色 / 边框 / 点色（避免页面散落硬编码 hex） */
+  --sasu-color-danger-light-bg: #fdeceb;
+  --sasu-color-primary-light-border: #e5b9bb;
+  --sasu-color-gradient-end: #d96c5f;
+  --sasu-color-muted-dot: #b9c0c9;
   --sasu-radius-base: 10px;
   --sasu-radius-card: 14px;
   --sasu-radius-pill: 999px;
-  --sasu-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06);
-
-  /* Element Plus 变量覆盖（light-3/5/7/8 由主色 #B4232A 向白色插值生成） */
-  --el-color-primary: var(--sasu-color-primary);
-  --el-color-primary-dark-2: var(--sasu-color-primary-hover);
-  --el-color-primary-light-3: #ca656a;
-  --el-color-primary-light-5: #da9195;
-  --el-color-primary-light-7: #e8bdbf;
-  --el-color-primary-light-8: #f0d3d4;
-  --el-color-primary-light-9: var(--sasu-color-primary-light-bg);
-  --el-color-success: var(--sasu-color-success);
-  --el-color-warning: var(--sasu-color-warning);
-  --el-color-danger: var(--sasu-color-danger);
-  --el-color-error: var(--sasu-color-danger);
-  --el-border-radius-base: var(--sasu-radius-base);
-  --el-border-radius-round: var(--sasu-radius-pill);
-  --el-font-size-base: 14px;
-  --el-text-color-primary: var(--sasu-text-primary);
-  --el-text-color-regular: var(--sasu-text-secondary);
-  --el-border-color: var(--sasu-border);
-  --el-bg-color-page: var(--sasu-bg-page);
-  --el-box-shadow-light: var(--sasu-shadow-card);
+  --sasu-shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --sasu-shadow-card-hover: 0 4px 16px rgba(16, 24, 40, 0.08);
 }
 
 html,
@@ -61,10 +50,47 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 卡片统一为「细边框 + 极轻投影」的现代观感 */
+.ant-card {
+  box-shadow: var(--sasu-shadow-card);
+}
+
+/* 弹窗圆角与卡片一致 */
+.ant-modal .ant-modal-content {
+  border-radius: var(--sasu-radius-card);
+}
+
+/* 表格：浅色表头 + 更轻的行悬浮（清爽现代风） */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #fafbfc;
+  color: var(--sasu-text-secondary);
+  font-weight: 500;
+}
+.ant-table-wrapper .ant-table-thead > tr > th::before {
+  display: none; /* 去掉表头列分隔线 */
+}
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td {
+  background: var(--sasu-bg-hover);
+}
+
 /* 积分、金额等数字用等宽数字（§13.3） */
 .num,
-.el-table .cell.num {
+.ant-table .num,
+.ant-table-cell.num {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * 键盘可达性（WCAG 2.4.7）：自绘的可点击卡片/行加 tabindex="0" + .sasu-keyable，
+ * 键盘聚焦时显示主色外框。antd 组件自身有 focus 样式，不在此覆盖。
+ */
+.sasu-keyable:focus-visible {
+  outline: 2px solid var(--sasu-color-primary);
+  outline-offset: 2px;
+  border-radius: var(--sasu-radius-base);
+}
+.sasu-keyable:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /*
@@ -79,4 +105,3 @@ body {
     corner-shape: superellipse(1.84);
   }
 }
-

@@ -18,7 +18,7 @@
 ## 技术栈
 
 - **monorepo**：pnpm workspace（`apps/web` / `apps/api` / `packages/shared` / `deploy`）
-- **前端**：Vue 3.5 + TypeScript 5.9 + Vite 8 + Element Plus 2.14（按需引入）+ Pinia 4 + Vue Router 5
+- **前端**：Vue 3.5 + TypeScript 5.9 + Vite 8 + Ant Design Vue 4（按需引入）+ Pinia 4 + Vue Router 5
 - **后端**：NestJS 12 + Prisma 7.10（driver adapter `@prisma/adapter-mariadb`）+ MySQL 8 + node-cron
 - **账本**：双分录（`point_transactions` + `point_legs`），`biz_key` 幂等，账户行按 id 升序加锁
 - **部署**：三段式 Dockerfile + docker compose（web/api/mysql/backup），仅暴露 web:80

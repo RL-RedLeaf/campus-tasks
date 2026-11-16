@@ -9,10 +9,11 @@
     "test": "pnpm --filter @sasu/shared build && vitest run"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.2",
+    "@ant-design/icons-vue": "^7.0.1",
     "@sasu/shared": "workspace:*",
+    "ant-design-vue": "^4.2.6",
     "axios": "1.21.1",
-    "element-plus": "2.14.8",
+    "dayjs": "^1.11.23",
     "pinia": "4.1.0",
     "vue": "3.5.45",
     "vue-router": "5.4.0"
