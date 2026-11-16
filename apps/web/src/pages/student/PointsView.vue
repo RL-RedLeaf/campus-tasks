@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { message } from '@/composables/feedback';
 import { pointsApi, type MyPoints, type TxRow } from '@/api/points';
+import { withdrawalsApi } from '@/api/withdrawals';
 import type { NormalizedError } from '@/api/http';
 import EmptyState from '@/components/EmptyState.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -16,6 +17,9 @@ const items = ref<TxRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
+/** 提现入口开关（决策记录 #2：汇率 0 隐藏、>0 自动出现），查询失败静默不影响页面主体 */
+const withdrawEnabled = ref(false);
 
 /** 交易类型中文（PRD §9.2.1） */
 const typeLabel: Record<string, string> = {
@@ -79,20 +83,32 @@ async function loadMe(): Promise<void> {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await pointsApi.myTransactions({ page: page.value, pageSize: PAGE_SIZE });
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
   }
 }
 
+async function checkWithdrawEnabled(): Promise<void> {
+  try {
+    const data = await withdrawalsApi.mine({ page: 1, pageSize: 1 });
+    withdrawEnabled.value = Boolean((data as { withdrawEnabled?: boolean }).withdrawEnabled);
+  } catch {
+    // 静默失败：不阻塞积分页主体，保持默认（隐藏提现入口）
+  }
+}
+
 onMounted(() => {
   void loadMe();
   void load();
+  void checkWithdrawEnabled();
 });
 </script>
 
@@ -100,7 +116,13 @@ onMounted(() => {
   <PageHeader title="我的积分" subtitle="积分由验收发放，可用于提现（每自然月 1 次）" />
   <div class="stat-cards">
     <a-card class="stat-card">
-      <div class="stat-label">可用积分</div>
+      <div class="stat-head">
+        <div class="stat-label">可用积分</div>
+        <!-- 汇率启用（withdrawEnabled）时自动出现提现入口，默认配置（汇率 0）不渲染 -->
+        <RouterLink v-if="withdrawEnabled" to="/withdraw">
+          <a-button type="primary" size="small">申请提现</a-button>
+        </RouterLink>
+      </div>
       <div class="stat-value"><PointsNum :value="me?.balance ?? 0" suffix="分" /></div>
     </a-card>
     <a-card class="stat-card">
@@ -126,7 +148,15 @@ onMounted(() => {
   <a-card class="block" title="积分流水">
     <a-spin :spinning="loading">
       <div class="table-area">
-        <a-table v-if="items.length > 0" :columns="columns" :data-source="items" :pagination="false" row-key="id" class="num-table">
+        <a-table
+          v-if="items.length > 0"
+          :columns="columns"
+          :data-source="items"
+          :pagination="false"
+          row-key="id"
+          class="num-table"
+          :scroll="{ x: 640 }"
+        >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'type'">{{ typeText(record as TxRow) }}</template>
             <template v-else-if="column.key === 'reason'">{{ (record as TxRow).reason || '—' }}</template>
@@ -141,6 +171,7 @@ onMounted(() => {
             <template v-else-if="column.key === 'createdAt'">{{ fmtTime((record as TxRow).createdAt) }}</template>
           </template>
         </a-table>
+        <EmptyState v-else-if="loadError" error @retry="load" />
         <EmptyState v-else-if="!loading" description="还没有积分流水，完成一个任务就会有第一笔收入" />
       </div>
     </a-spin>
@@ -160,6 +191,12 @@ onMounted(() => {
 .stat-card {
   border-radius: var(--sasu-radius-base);
   box-shadow: var(--sasu-shadow-card);
+}
+.stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .stat-label {
   color: var(--sasu-text-secondary);

@@ -19,6 +19,7 @@ const total = ref(0);
 const unread = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
 const markingAll = ref(false);
 
 const isUnreadTab = computed(() => tab.value === 'UNREAD');
@@ -29,6 +30,7 @@ function fmtTime(v: string | null | undefined): string {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const params: Record<string, unknown> = { page: page.value, pageSize: PAGE_SIZE };
     if (isUnreadTab.value) params.unreadOnly = '1';
@@ -38,6 +40,7 @@ async function load(): Promise<void> {
     unread.value = data.unread;
     notifyStore.unread = data.unread;
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
@@ -119,9 +122,13 @@ onMounted(() => {
           <div
             v-for="n in items"
             :key="n.id"
-            class="noti-item"
+            class="noti-item sasu-keyable"
             :class="{ unread: !n.readAt }"
+            role="button"
+            tabindex="0"
             @click="open(n)"
+            @keydown.enter.self.prevent="open(n)"
+            @keydown.space.self.prevent="open(n)"
           >
             <div class="noti-main">
               <span v-if="!n.readAt" class="dot" />
@@ -143,6 +150,11 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        <EmptyState
+          v-else-if="loadError"
+          error
+          @retry="load"
+        />
         <EmptyState
           v-else-if="!loading"
           :description="isUnreadTab ? '没有未读通知' : '还没有收到通知'"
@@ -246,5 +258,18 @@ onMounted(() => {
   margin-top: 16px;
   display: flex;
   justify-content: center;
+}
+@media (max-width: 767px) {
+  /* 窄屏：标题与时间允许换行，正文缩进收回，避免时间戳挤压标题 */
+  .noti-main {
+    flex-wrap: wrap;
+  }
+  .noti-time {
+    margin-left: 0;
+  }
+  .noti-body,
+  .noti-foot {
+    padding-left: 0;
+  }
 }
 </style>

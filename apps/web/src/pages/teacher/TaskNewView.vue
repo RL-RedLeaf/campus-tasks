@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { message } from '@/composables/feedback';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
+import { confirm, message } from '@/composables/feedback';
 import type { FormInstance } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
 import type { Dayjs } from 'dayjs';
@@ -69,6 +69,44 @@ function disabledDate(d: Dayjs): boolean {
   return t < Date.now() + HOUR - DAY || t > Date.now() + MAX_DAYS * DAY;
 }
 
+// ---------- 未保存保护（§8.4 防误操作） ----------
+/** 任一字段与初始值不同即视为 dirty */
+const dirty = computed(
+  () =>
+    form.title !== '' ||
+    form.categoryId !== undefined ||
+    form.description !== '' ||
+    form.requirement !== '' ||
+    form.location !== '' ||
+    form.contactInfo !== '' ||
+    form.headcount !== 1 ||
+    form.deadlineAt !== undefined,
+);
+/** 提交成功或已通过确认后的放行标记，避免离开守卫二次弹窗 */
+const leaveBypass = ref(false);
+
+async function discardConfirm(): Promise<boolean> {
+  try {
+    await confirm({ title: '放弃编辑？', content: '未保存的内容将丢失', okText: '放弃', icon: 'warning' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function onCancel(): Promise<void> {
+  if (dirty.value && !(await discardConfirm())) return;
+  leaveBypass.value = true;
+  router.back();
+}
+
+onBeforeRouteLeave(async (to) => {
+  if (leaveBypass.value || !dirty.value) return true;
+  // 目标为登录页 / 403 时跳过确认（会话过期等场景）
+  if (to.path === '/login' || to.path === '/403') return true;
+  return await discardConfirm();
+});
+
 async function onSubmit(): Promise<void> {
   await formRef.value?.validate();
   loading.value = true;
@@ -85,6 +123,7 @@ async function onSubmit(): Promise<void> {
     if (form.contactInfo.trim()) data.contactInfo = form.contactInfo.trim();
     await tasksApi.create(data);
     message.success('任务已提交，等待管理员定价后才会出现在任务大厅');
+    leaveBypass.value = true;
     await router.push('/teacher/tasks');
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '提交失败');

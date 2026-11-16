@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { ArrowRightOutlined } from '@ant-design/icons-vue';
 import { communityApi } from '@/api/admin';
 import { pointsApi } from '@/api/points';
@@ -9,7 +8,6 @@ import PageHeader from '@/components/PageHeader.vue';
 import PointsNum from '@/components/PointsNum.vue';
 
 const auth = useAuthStore();
-const router = useRouter();
 const announcements = ref<{ id: string; title: string; content: string; publishedAt: string | null }[]>([]);
 const points = ref<{ balance: number; frozen: number; penaltyDebt: number } | null>(null);
 
@@ -50,7 +48,7 @@ onMounted(async () => {
 <template>
   <PageHeader title="首页" :subtitle="`你好，${auth.user?.name ?? ''}`" />
   <a-row :gutter="16">
-    <a-col :span="isStudent ? 16 : 24">
+    <a-col :xs="24" :sm="isStudent ? 16 : 24">
       <a-card class="block" title="公告">
         <template v-if="announcements.length">
           <div v-for="a in announcements" :key="a.id" class="announce">
@@ -62,7 +60,7 @@ onMounted(async () => {
         <span v-else class="muted">暂无公告</span>
       </a-card>
     </a-col>
-    <a-col v-if="isStudent" :span="8">
+    <a-col v-if="isStudent" :xs="24" :sm="8">
       <a-card class="block" title="我的积分">
         <div class="point-line">
           <span>可用余额</span>
@@ -81,9 +79,11 @@ onMounted(async () => {
   </a-row>
   <a-card class="block" title="我的待办">
     <ul class="todo-list">
-      <li v-for="t in todos" :key="t.to" class="todo-item" @click="router.push(t.to)">
-        <span class="todo-label">{{ t.label }}</span>
-        <ArrowRightOutlined class="todo-arrow" />
+      <li v-for="t in todos" :key="t.to">
+        <RouterLink class="todo-item sasu-keyable" :to="t.to">
+          <span class="todo-label">{{ t.label }}</span>
+          <ArrowRightOutlined class="todo-arrow" />
+        </RouterLink>
       </li>
     </ul>
   </a-card>
@@ -137,9 +137,10 @@ onMounted(async () => {
   cursor: pointer;
   color: var(--sasu-text-primary);
   font-size: 14px;
+  text-decoration: none;
   transition: background 0.15s ease;
 }
-.todo-item:last-child {
+.todo-list li:last-child .todo-item {
   border-bottom: none;
 }
 .todo-item:hover {

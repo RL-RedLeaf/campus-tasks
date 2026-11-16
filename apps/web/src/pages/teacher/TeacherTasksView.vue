@@ -34,12 +34,13 @@ const items = ref<TaskSummary[]>([]);
 const total = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
 
 const columns: TableColumnsType = [
   { title: '标题', key: 'title', ellipsis: true },
   { title: '分类', key: 'category', width: 120 },
   { title: '状态', key: 'status', width: 100 },
-  { title: '单人赏金', key: 'reward', width: 110, align: 'right' },
+  { title: '单人积分', key: 'reward', width: 110, align: 'right' },
   { title: '名额', key: 'quota', width: 110, align: 'center' },
   { title: '截止时间', key: 'deadlineAt', width: 170 },
 ];
@@ -50,6 +51,7 @@ function fmtTime(v: string | null | undefined): string {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const tab = tabs.find((t) => t.key === activeTab.value);
     const params: Record<string, unknown> = { page: page.value, pageSize: PAGE_SIZE };
@@ -58,6 +60,7 @@ async function load(): Promise<void> {
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
@@ -71,8 +74,19 @@ function onTabChange(): void {
 function openRow(row: TaskSummary): void {
   void router.push(`/teacher/tasks/${row.id}`);
 }
-function customRow(record: TaskSummary): { onClick: () => void } {
-  return { onClick: () => openRow(record) };
+/** 行点击 + 键盘可达：Enter/空格打开详情（customRow 的属性会透传到 tr） */
+function customRow(record: TaskSummary): Record<string, unknown> {
+  return {
+    onClick: () => openRow(record),
+    tabindex: 0,
+    class: 'sasu-keyable',
+    onKeydown: (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openRow(record);
+      }
+    },
+  };
 }
 
 onMounted(() => {
@@ -100,6 +114,7 @@ onMounted(() => {
           :pagination="false"
           row-key="id"
           class="click-table"
+          :scroll="{ x: 640 }"
           :custom-row="customRow"
         >
           <template #bodyCell="{ column, record }">
@@ -116,6 +131,7 @@ onMounted(() => {
             <template v-else-if="column.key === 'deadlineAt'">{{ fmtTime(record.deadlineAt) }}</template>
           </template>
         </a-table>
+        <EmptyState v-else-if="loadError" error @retry="load" />
         <EmptyState v-else-if="!loading" description="还没有发布过任务">
           <a-button type="primary" @click="router.push('/tasks/new')">发布第一个任务</a-button>
         </EmptyState>

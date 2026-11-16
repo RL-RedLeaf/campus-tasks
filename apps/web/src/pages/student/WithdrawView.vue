@@ -20,6 +20,9 @@ const items = ref<WithdrawalRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
+/** 行内撤回操作进行中的行 id：防重复提交 */
+const operatingId = ref<string | null>(null);
 const me = ref<MyPoints | null>(null);
 
 const amount = ref<number>(MIN_POINTS);
@@ -55,12 +58,14 @@ function cashText(v: string | number | null | undefined): string {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await withdrawalsApi.mine({ page: page.value, pageSize: PAGE_SIZE });
     withdrawEnabled.value = data.withdrawEnabled !== false;
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
@@ -110,6 +115,7 @@ async function onSubmit(): Promise<void> {
 }
 
 async function onWithdrawRecord(row: WithdrawalRow): Promise<void> {
+  if (operatingId.value) return; // 防重复提交
   try {
     await confirm({
       title: '撤回提现申请',
@@ -120,12 +126,15 @@ async function onWithdrawRecord(row: WithdrawalRow): Promise<void> {
   } catch {
     return;
   }
+  operatingId.value = row.id;
   try {
     await withdrawalsApi.selfWithdraw(row.id);
     message.success('已撤回，冻结积分已退回可用余额');
     await Promise.all([load(), loadPoints()]);
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '撤回失败');
+  } finally {
+    operatingId.value = null;
   }
 }
 
@@ -174,7 +183,7 @@ onMounted(() => {
     <a-card class="block" title="我的提现记录">
       <a-spin :spinning="loading">
         <div class="table-area">
-          <a-table v-if="items.length > 0" :columns="columns" :data-source="items" :pagination="false" row-key="id">
+          <a-table v-if="items.length > 0" :columns="columns" :data-source="items" :pagination="false" row-key="id" :scroll="{ x: 760 }">
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'points'">
                 <PointsNum class="num" :value="record.points" suffix="分" />
@@ -187,6 +196,7 @@ onMounted(() => {
                 <a-button
                   v-if="record.status === 'PENDING'"
                   size="small"
+                  :loading="operatingId === record.id"
                   @click="onWithdrawRecord(record as WithdrawalRow)"
                 >
                   撤回
@@ -195,6 +205,7 @@ onMounted(() => {
               </template>
             </template>
           </a-table>
+          <EmptyState v-else-if="loadError" error @retry="load" />
           <EmptyState v-else-if="!loading" description="还没有提现记录" />
         </div>
       </a-spin>

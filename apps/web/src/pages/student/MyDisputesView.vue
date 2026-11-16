@@ -18,6 +18,7 @@ const items = ref<DisputeRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const loading = ref(false);
+const loadError = ref(false);
 
 const dialogOpen = ref(false);
 const submitting = ref(false);
@@ -70,11 +71,13 @@ const rules: Record<string, Rule[]> = {
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await disputesApi.mine({ page: page.value, pageSize: PAGE_SIZE });
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '加载失败');
   } finally {
     loading.value = false;
@@ -115,7 +118,7 @@ async function onCreate(): Promise<void> {
     </template>
     <a-spin :spinning="loading">
       <div class="table-area">
-        <a-table v-if="items.length > 0" :columns="columns" :data-source="items" :pagination="false" row-key="id">
+        <a-table v-if="items.length > 0" :columns="columns" :data-source="items" :pagination="false" row-key="id" :scroll="{ x: 760 }">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'taskId'">
               <a-button
@@ -141,6 +144,7 @@ async function onCreate(): Promise<void> {
             <template v-else-if="column.key === 'createdAt'">{{ fmtTime(record.createdAt) }}</template>
           </template>
         </a-table>
+        <EmptyState v-else-if="loadError" error @retry="load" />
         <EmptyState v-else-if="!loading" description="没有仲裁记录" />
       </div>
     </a-spin>
@@ -149,7 +153,7 @@ async function onCreate(): Promise<void> {
     </div>
   </a-card>
 
-  <a-modal v-model:open="dialogOpen" title="发起仲裁" :width="520">
+  <a-modal v-model:open="dialogOpen" title="发起仲裁" :width="520" :mask-closable="false" :keyboard="false">
     <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent="onCreate">
       <a-form-item label="关联任务 ID" name="taskId">
         <a-input v-model:value="form.taskId" class="task-id-input" placeholder="任务列表中的数字 ID，如 12" />
@@ -166,7 +170,7 @@ async function onCreate(): Promise<void> {
       </a-form-item>
     </a-form>
     <template #footer>
-      <a-button @click="dialogOpen = false">取消</a-button>
+      <a-button :disabled="submitting" @click="dialogOpen = false">取消</a-button>
       <a-button type="primary" :loading="submitting" @click="onCreate">提交仲裁</a-button>
     </template>
   </a-modal>

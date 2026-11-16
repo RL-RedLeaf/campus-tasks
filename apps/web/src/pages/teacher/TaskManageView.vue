@@ -32,7 +32,10 @@ const task = ref<ManageTask | null>(null);
 const assignments = ref<AssignmentRow[]>([]);
 const comments = ref<{ id: string; content: string; author: { name: string; role: string }; createdAt: string }[]>([]);
 const loading = ref(false);
+const loadError = ref(false);
 const categories = ref<CategoryRow[]>([]);
+/** 行内异步操作进行中的接单 id：防重复提交 + 同行按钮禁用（PRD §11.4） */
+const operatingId = ref<string | null>(null);
 
 const now = ref(Date.now());
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -90,7 +93,9 @@ async function load(): Promise<void> {
     ]);
     assignments.value = asg.items;
     comments.value = cm.items;
+    loadError.value = false;
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '任务不存在或无权查看');
   } finally {
     loading.value = false;
@@ -112,6 +117,30 @@ const editForm = reactive({
   headcount: 1,
   // a-date-picker 的 value 类型为 string | Dayjs | undefined：用 undefined 而非 null
   deadlineAt: undefined as Dayjs | undefined,
+});
+/** 打开弹窗时的字段快照，用于 dirty 判断（未保存修改时取消需确认） */
+const editSnapshot = reactive({
+  title: '',
+  categoryId: undefined as number | undefined,
+  description: '',
+  requirement: '',
+  location: '',
+  contactInfo: '',
+  headcount: 1,
+  deadlineMs: null as number | null,
+});
+const editDirty = computed(() => {
+  const s = editSnapshot;
+  return (
+    editForm.title !== s.title ||
+    editForm.categoryId !== s.categoryId ||
+    editForm.description !== s.description ||
+    editForm.requirement !== s.requirement ||
+    editForm.location !== s.location ||
+    editForm.contactInfo !== s.contactInfo ||
+    editForm.headcount !== s.headcount ||
+    (editForm.deadlineAt ? editForm.deadlineAt.valueOf() : null) !== s.deadlineMs
+  );
 });
 
 const editRules = computed<Record<string, Rule[]>>(() => ({
@@ -162,7 +191,34 @@ function openEdit(): void {
   editForm.contactInfo = t.contactInfo ?? '';
   editForm.headcount = t.headcount;
   editForm.deadlineAt = dayjs(t.deadlineAt);
+  Object.assign(editSnapshot, {
+    title: editForm.title,
+    categoryId: editForm.categoryId,
+    description: editForm.description,
+    requirement: editForm.requirement,
+    location: editForm.location,
+    contactInfo: editForm.contactInfo,
+    headcount: editForm.headcount,
+    deadlineMs: editForm.deadlineAt ? editForm.deadlineAt.valueOf() : null,
+  });
   editOpen.value = true;
+}
+
+/** 取消编辑：有未保存修改时先确认（§8.4 防误操作） */
+async function closeEdit(): Promise<void> {
+  if (editDirty.value) {
+    try {
+      await confirm({
+        title: '放弃修改？',
+        content: '未保存的修改将丢失',
+        okText: '放弃',
+        icon: 'warning',
+      });
+    } catch {
+      return;
+    }
+  }
+  editOpen.value = false;
 }
 
 async function onSaveEdit(): Promise<void> {
@@ -216,12 +272,15 @@ async function onAccept(row: AssignmentRow): Promise<void> {
   } catch {
     return;
   }
+  operatingId.value = row.id;
   try {
     await submissionsApi.review(row.id, 'ACCEPT');
     message.success('已验收通过，积分已发放');
     await load();
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '操作失败');
+  } finally {
+    operatingId.value = null;
   }
 }
 
@@ -239,21 +298,29 @@ async function onReject(row: AssignmentRow): Promise<void> {
           if (n > 200) return '理由最多 200 字';
           return true;
         },
+        okText: '确认驳回',
       })
     ).trim();
   } catch {
     return;
   }
+  operatingId.value = row.id;
   try {
     await submissionsApi.review(row.id, 'REJECT', reason);
     message.success('已驳回，学生将收到通知');
     await load();
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '操作失败');
+  } finally {
+    operatingId.value = null;
   }
 }
 
 // ---------------- 关闭 / 取消 ----------------
+
+/** 页面级任务操作进行中（'close' | 'cancel'）：防重复提交（PRD §11.4） */
+const taskOpKind = ref<'' | 'close' | 'cancel'>('');
+const taskOperating = computed(() => taskOpKind.value !== '');
 
 async function onClose(): Promise<void> {
   let reason: string;
@@ -264,17 +331,21 @@ async function onClose(): Promise<void> {
         message: '关闭后停止接单：进行中的接单将不计违约，剩余托管积分退回积分池（提交待验收的保留）。确认关闭？',
         placeholder: '请填写关闭原因（必填）',
         validate: (v: string) => ((v ?? '').trim().length >= 2 ? true : '关闭原因至少 2 字'),
+        okText: '确认关闭',
       })
     ).trim();
   } catch {
     return;
   }
+  taskOpKind.value = 'close';
   try {
     await tasksApi.close(taskId.value, reason);
     message.success('任务已关闭');
     await load();
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '操作失败');
+  } finally {
+    taskOpKind.value = '';
   }
 }
 
@@ -287,17 +358,23 @@ async function onCancel(): Promise<void> {
         message: '取消为终态且立即退款；仅当任务没有待验收（SUBMITTED）的提交时可用。确认取消？',
         placeholder: '请填写取消原因（必填）',
         validate: (v: string) => ((v ?? '').trim().length >= 2 ? true : '取消原因至少 2 字'),
+        // 取消为终态且立即退款，不可逆：红色确认按钮（§8.4）
+        danger: true,
+        okText: '确认取消任务',
       })
     ).trim();
   } catch {
     return;
   }
+  taskOpKind.value = 'cancel';
   try {
     await tasksApi.cancel(taskId.value, reason);
     message.success('任务已取消，托管积分已退回');
     await load();
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '操作失败');
+  } finally {
+    taskOpKind.value = '';
   }
 }
 
@@ -363,13 +440,13 @@ onBeforeUnmount(() => {
               <StatusTag :status="task.status" />
             </div>
             <div class="head-ops">
-              <a-button v-if="editable && canOperate" size="small" @click="openEdit">编辑</a-button>
-              <a-button v-if="canClose && canOperate" size="small" @click="onClose">关闭任务</a-button>
-              <a-button v-if="canCancel && canOperate" size="small" danger @click="onCancel">取消任务</a-button>
+              <a-button v-if="editable && canOperate" size="small" :disabled="taskOperating" @click="openEdit">编辑</a-button>
+              <a-button v-if="canClose && canOperate" size="small" :loading="taskOpKind === 'close'" :disabled="taskOperating" @click="onClose">关闭任务</a-button>
+              <a-button v-if="canCancel && canOperate" size="small" danger :loading="taskOpKind === 'cancel'" :disabled="taskOperating" @click="onCancel">取消任务</a-button>
             </div>
           </div>
         </template>
-        <a-descriptions :column="3" bordered>
+        <a-descriptions :column="{ xs: 1, sm: 2, lg: 3 }" bordered>
           <a-descriptions-item label="分类">{{ task.category?.name ?? '—' }}</a-descriptions-item>
           <a-descriptions-item label="单人赏金">
             <span v-if="task.rewardPerPerson !== null" class="reward">
@@ -418,8 +495,27 @@ onBeforeUnmount(() => {
               </template>
               <template v-else-if="column.key === 'action'">
                 <template v-if="record.status === 'SUBMITTED'">
-                  <a-button size="small" type="primary" ghost @click="onAccept(record as AssignmentRow)">验收通过</a-button>
-                  <a-button size="small" danger ghost class="btn-gap" @click="onReject(record as AssignmentRow)">驳回</a-button>
+                  <a-button
+                    size="small"
+                    type="primary"
+                    ghost
+                    :loading="operatingId === record.id"
+                    :disabled="operatingId !== null"
+                    @click="onAccept(record as AssignmentRow)"
+                  >
+                    验收通过
+                  </a-button>
+                  <a-button
+                    size="small"
+                    danger
+                    ghost
+                    class="btn-gap"
+                    :loading="operatingId === record.id"
+                    :disabled="operatingId !== null"
+                    @click="onReject(record as AssignmentRow)"
+                  >
+                    驳回
+                  </a-button>
                 </template>
                 <span v-else class="muted">—</span>
               </template>
@@ -456,7 +552,7 @@ onBeforeUnmount(() => {
       </a-card>
 
       <!-- 编辑对话框 -->
-      <a-modal v-model:open="editOpen" title="编辑任务" :width="640">
+      <a-modal v-model:open="editOpen" title="编辑任务" :width="640" :mask-closable="false" :keyboard="false">
         <a-form ref="editFormRef" :model="editForm" :rules="editRules" layout="vertical" @submit.prevent="onSaveEdit">
           <a-form-item label="任务标题（2-50 字）" name="title">
             <a-input v-model:value="editForm.title" :maxlength="50" show-count />
@@ -517,11 +613,12 @@ onBeforeUnmount(() => {
           </a-row>
         </a-form>
         <template #footer>
-          <a-button @click="editOpen = false">取消</a-button>
+          <a-button :disabled="editSaving" @click="closeEdit">取消</a-button>
           <a-button type="primary" :loading="editSaving" @click="onSaveEdit">保存</a-button>
         </template>
       </a-modal>
     </template>
+    <EmptyState v-else-if="loadError" error @retry="load" />
     <EmptyState v-else-if="!loading" description="任务不存在或无权查看">
       <a-button type="primary" @click="router.push('/teacher/tasks')">返回我的任务</a-button>
     </EmptyState>

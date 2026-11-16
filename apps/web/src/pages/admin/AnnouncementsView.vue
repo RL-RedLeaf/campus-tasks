@@ -31,6 +31,7 @@ const columns: TableColumnsType = [
 ];
 
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<AnnouncementRow[]>([]);
 const total = ref(0);
 const page = ref(1);
@@ -38,11 +39,13 @@ const pageSize = ref(20);
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await communityApi.adminAnnouncements({ page: page.value, pageSize: pageSize.value });
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -137,7 +140,10 @@ async function remove(row: AnnouncementRow): Promise<void> {
           <a-button v-if="record.status !== 'OFFLINE'" type="link" size="small" class="op-link op-danger" @click="remove(record as AnnouncementRow)">下线</a-button>
         </template>
       </template>
-      <template #emptyText><EmptyState description="还没有公告，点击右上角新建" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="还没有公告，点击右上角新建" />
+      </template>
     </a-table>
 
     <div class="pager">
@@ -145,7 +151,7 @@ async function remove(row: AnnouncementRow): Promise<void> {
     </div>
   </a-card>
 
-  <a-modal v-model:open="dialogOpen" :title="editingId ? '编辑公告' : '新建公告'" :width="560">
+  <a-modal v-model:open="dialogOpen" :title="editingId ? '编辑公告' : '新建公告'" :width="560" :mask-closable="false" :keyboard="false">
     <a-form ref="formRef" :model="form" :rules="rules" :label-col="{ style: { width: '80px' } }">
       <a-form-item label="标题" name="title">
         <a-input v-model:value="form.title" :maxlength="50" show-count />
@@ -162,7 +168,7 @@ async function remove(row: AnnouncementRow): Promise<void> {
       </a-form-item>
     </a-form>
     <template #footer>
-      <a-button @click="dialogOpen = false">取消</a-button>
+      <a-button :disabled="saving" @click="dialogOpen = false">取消</a-button>
       <a-button type="primary" :loading="saving" @click="submit">保存</a-button>
     </template>
   </a-modal>

@@ -35,6 +35,7 @@ const columns: TableColumnsType = [
 ];
 
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<AuditRow[]>([]);
 const total = ref(0);
 const page = ref(1);
@@ -50,6 +51,7 @@ const roleOptions = [
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await auditApi.list({
       action: filters.action || undefined,
@@ -60,6 +62,7 @@ async function load(): Promise<void> {
     items.value = data.items;
     total.value = data.total;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -112,7 +115,10 @@ onMounted(() => void load());
         <template v-else-if="column.key === 'reason'">{{ record.reason ?? '—' }}</template>
         <template v-else-if="column.key === 'ip'">{{ record.ip ?? '—' }}</template>
       </template>
-      <template #emptyText><EmptyState description="暂无审计日志" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="暂无审计日志" />
+      </template>
     </a-table>
 
     <div class="pager">

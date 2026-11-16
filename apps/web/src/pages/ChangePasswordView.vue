@@ -65,15 +65,15 @@ async function onSubmit(): Promise<void> {
     <a-card class="card">
       <h2>修改初始密码</h2>
       <p class="tip">首次登录必须修改初始密码后才能使用系统。</p>
-      <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent>
+      <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent="onSubmit">
         <a-form-item label="当前密码" name="oldPassword">
-          <a-input-password v-model:value="form.oldPassword" />
+          <a-input-password v-model:value="form.oldPassword" autocomplete="current-password" />
         </a-form-item>
         <a-form-item label="新密码（≥8 位，含字母和数字）" name="newPassword">
-          <a-input-password v-model:value="form.newPassword" />
+          <a-input-password v-model:value="form.newPassword" autocomplete="new-password" />
         </a-form-item>
         <a-form-item label="确认新密码" name="confirm">
-          <a-input-password v-model:value="form.confirm" />
+          <a-input-password v-model:value="form.confirm" autocomplete="new-password" />
         </a-form-item>
         <a-button class="submit" type="primary" html-type="submit" :loading="loading" @click="onSubmit">
           修改并重新登录

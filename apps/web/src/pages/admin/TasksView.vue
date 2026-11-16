@@ -55,10 +55,13 @@ const TABS = [
 const activeStatus = ref('PENDING_REWARD');
 const keyword = ref('');
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<TaskSummary[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
+/** 行内异步操作进行中的行 id：防重复提交 + 同行按钮禁用（PRD §11.4） */
+const operatingId = ref<string | null>(null);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -71,7 +74,9 @@ async function load(): Promise<void> {
     });
     items.value = data.items;
     total.value = data.total;
+    loadError.value = false;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -194,12 +199,22 @@ async function forceAction(row: TaskSummary, kind: 'offline' | 'cancel'): Promis
           : '强制取消会作废任务并将托管积分退回积分池，请填写原因（必填）。',
         placeholder: '请填写操作原因',
         validate: (v: string) => (v && v.trim() ? true : '原因不能为空'),
+        // 强制下架/强制取消均为不可逆操作：红色确认按钮（§8.4）
+        danger: true,
+        okText: isOffline ? '确认下架' : '确认取消',
       })
     ).trim();
-    if (isOffline) await tasksApi.forceOffline(row.id, reason);
-    else await tasksApi.forceCancel(row.id, reason);
-    message.success(isOffline ? '已强制下架' : '已强制取消');
-    void load();
+    operatingId.value = row.id;
+    try {
+      if (isOffline) await tasksApi.forceOffline(row.id, reason);
+      else await tasksApi.forceCancel(row.id, reason);
+      message.success(isOffline ? '已强制下架' : '已强制取消');
+      void load();
+    } catch (e) {
+      if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    } finally {
+      operatingId.value = null;
+    }
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
   }
@@ -277,14 +292,43 @@ async function openPreview(row: TaskSummary): Promise<void> {
         <template v-else-if="column.key === 'deadlineAt'">{{ fmtTime(record.deadlineAt) }}</template>
         <template v-else-if="column.key === 'createdAt'">{{ fmtTime(record.createdAt) }}</template>
         <template v-else-if="column.key === 'action'">
-          <a-button v-if="record.status === 'PENDING_REWARD'" type="link" size="small" class="op-link" @click="openPrice(record as TaskSummary)">定价</a-button>
-          <a-button v-if="isPricedUnsettled(record as TaskSummary)" type="link" size="small" class="op-link" @click="openReprice(record as TaskSummary)">改价</a-button>
-          <a-button v-if="isPricedUnsettled(record as TaskSummary)" type="link" size="small" class="op-link" @click="openPreview(record as TaskSummary)">结算预览</a-button>
+          <a-button
+            v-if="record.status === 'PENDING_REWARD'"
+            type="link"
+            size="small"
+            class="op-link"
+            :disabled="operatingId !== null"
+            @click="openPrice(record as TaskSummary)"
+          >
+            定价
+          </a-button>
+          <a-button
+            v-if="isPricedUnsettled(record as TaskSummary)"
+            type="link"
+            size="small"
+            class="op-link"
+            :disabled="operatingId !== null"
+            @click="openReprice(record as TaskSummary)"
+          >
+            改价
+          </a-button>
+          <a-button
+            v-if="isPricedUnsettled(record as TaskSummary)"
+            type="link"
+            size="small"
+            class="op-link"
+            :disabled="operatingId !== null"
+            @click="openPreview(record as TaskSummary)"
+          >
+            结算预览
+          </a-button>
           <a-button
             v-if="record.status === 'PENDING_REWARD' || (record.status === 'CLOSED' && record.settlementStatus !== 'DONE')"
             type="link"
             size="small"
             class="op-link op-warning"
+            :loading="operatingId === record.id"
+            :disabled="operatingId !== null"
             @click="forceAction(record as TaskSummary, 'offline')"
           >
             强制下架
@@ -294,13 +338,18 @@ async function openPreview(row: TaskSummary): Promise<void> {
             type="link"
             size="small"
             class="op-link op-danger"
+            :loading="operatingId === record.id"
+            :disabled="operatingId !== null"
             @click="forceAction(record as TaskSummary, 'cancel')"
           >
             强制取消
           </a-button>
         </template>
       </template>
-      <template #emptyText><EmptyState description="该状态下暂无任务" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="该状态下暂无任务" />
+      </template>
     </a-table>
 
     <div class="pager">

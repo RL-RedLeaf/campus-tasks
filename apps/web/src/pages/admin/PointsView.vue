@@ -58,12 +58,15 @@ interface PoolStats {
 }
 const pool = ref<PoolStats | null>(null);
 const poolLoading = ref(false);
+const poolError = ref(false);
 
 async function loadPool(): Promise<void> {
   poolLoading.value = true;
+  poolError.value = false;
   try {
     pool.value = await pointsApi.pool();
   } catch (e) {
+    poolError.value = true;
     message.error(errMsg(e));
   } finally {
     poolLoading.value = false;
@@ -143,6 +146,7 @@ const userProfile = ref<{ balance: number; frozen: number; penaltyDebt: number }
 const userTxs = ref<TxRow[]>([]);
 const userTotal = ref(0);
 const userQueried = ref(false);
+const userLoadError = ref(false);
 
 const userTxColumns: TableColumnsType = [
   { title: '时间', key: 'createdAt', width: 170 },
@@ -160,6 +164,7 @@ async function queryUser(page?: number): Promise<void> {
   }
   if (page) userQuery.page = page;
   userLoading.value = true;
+  userLoadError.value = false;
   try {
     const data = await pointsApi.userPoints(id, { page: userQuery.page, pageSize: userQuery.pageSize });
     userProfile.value = { balance: data.balance, frozen: data.frozen, penaltyDebt: data.penaltyDebt };
@@ -167,6 +172,7 @@ async function queryUser(page?: number): Promise<void> {
     userTotal.value = data.total;
     userQueried.value = true;
   } catch (e) {
+    userLoadError.value = true;
     message.error(errMsg(e));
   } finally {
     userLoading.value = false;
@@ -176,6 +182,7 @@ async function queryUser(page?: number): Promise<void> {
 // ---------- 全量流水 ----------
 const allTxs = reactive({ page: 1, pageSize: 20, type: undefined as string | undefined });
 const allLoading = ref(false);
+const allLoadError = ref(false);
 const allItems = ref<TxRow[]>([]);
 const allTotal = ref(0);
 
@@ -188,6 +195,7 @@ const allTxColumns: TableColumnsType = [
 
 async function loadAllTxs(): Promise<void> {
   allLoading.value = true;
+  allLoadError.value = false;
   try {
     const data = await pointsApi.allTransactions({
       page: allTxs.page,
@@ -197,6 +205,7 @@ async function loadAllTxs(): Promise<void> {
     allItems.value = data.items;
     allTotal.value = data.total;
   } catch (e) {
+    allLoadError.value = true;
     message.error(errMsg(e));
   } finally {
     allLoading.value = false;
@@ -265,6 +274,11 @@ async function confirmUserAdjust(): Promise<void> {
   <PageHeader title="积分池管理" subtitle="积分发行与调账、用户积分查询、全量流水与账务对账" />
 
   <!-- 统计卡 -->
+  <a-alert v-if="poolError" type="error" message="积分池统计加载失败" show-icon class="block">
+    <template #action>
+      <a-button size="small" danger @click="loadPool">重试</a-button>
+    </template>
+  </a-alert>
   <a-spin :spinning="poolLoading">
     <a-row :gutter="16">
       <a-col v-for="card in poolCards" :key="card.key" :span="4">
@@ -345,7 +359,10 @@ async function confirmUserAdjust(): Promise<void> {
           </template>
           <template v-else-if="column.key === 'reason'">{{ record.reason ?? '—' }}</template>
         </template>
-        <template #emptyText><EmptyState description="该用户暂无流水" /></template>
+        <template #emptyText>
+          <EmptyState v-if="userLoadError" error @retry="() => queryUser()" />
+          <EmptyState v-else description="该用户暂无流水" />
+        </template>
       </a-table>
       <div class="pager">
         <AppPagination
@@ -379,6 +396,7 @@ async function confirmUserAdjust(): Promise<void> {
       :loading="allLoading"
       :pagination="false"
       row-key="id"
+      :scroll="{ x: 760 }"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'createdAt'">{{ fmtTime(record.createdAt) }}</template>
@@ -391,7 +409,10 @@ async function confirmUserAdjust(): Promise<void> {
           </div>
         </template>
       </template>
-      <template #emptyText><EmptyState /></template>
+      <template #emptyText>
+        <EmptyState v-if="allLoadError" error @retry="loadAllTxs" />
+        <EmptyState v-else />
+      </template>
     </a-table>
     <div class="pager">
       <AppPagination v-model:page="allTxs.page" :page-size="allTxs.pageSize" :total="allTotal" @change="loadAllTxs" />

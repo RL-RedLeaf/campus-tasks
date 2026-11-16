@@ -26,12 +26,15 @@ interface Overview {
 
 const overview = ref<Overview | null>(null);
 const loading = ref(false);
+const loadError = ref(false);
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     overview.value = await statsApi.overview();
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -84,6 +87,12 @@ const paidTotal = computed(() => (overview.value?.paidBaseTotal ?? 0) + (overvie
       <a-button type="primary">导出统计报表（xlsx）</a-button>
     </a>
   </div>
+
+  <a-alert v-if="loadError" type="error" message="统计数据加载失败" show-icon class="block mt16">
+    <template #action>
+      <a-button size="small" danger @click="load">重试</a-button>
+    </template>
+  </a-alert>
 
   <a-spin :spinning="loading">
     <a-row :gutter="16">

@@ -28,6 +28,7 @@ interface Overview {
 
 const overview = ref<Overview | null>(null);
 const loading = ref(false);
+const loadError = ref(false);
 
 interface ReconcileResult {
   ok: boolean;
@@ -88,9 +89,11 @@ const completionRate = computed(() => Math.round((overview.value?.completionRate
 
 async function loadOverview(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     overview.value = await statsApi.overview();
   } catch (e) {
+    loadError.value = true;
     message.error((e as NormalizedError).friendlyMessage ?? '操作失败');
   } finally {
     loading.value = false;
@@ -117,6 +120,7 @@ const jobs = [
 const jobRunning = ref<string | null>(null);
 
 async function runJob(job: string): Promise<void> {
+  if (jobRunning.value) return; // 防并发触发多个作业
   jobRunning.value = job;
   try {
     await tasksApi.runJob(job);
@@ -140,11 +144,25 @@ onMounted(() => {
 
 <template>
   <PageHeader title="管理端仪表盘" subtitle="待办概览、账务对账与运维工具" />
+  <a-alert v-if="loadError" class="mt16" type="error" message="概览数据加载失败" show-icon>
+    <template #action>
+      <a-button size="small" danger @click="loadOverview">重试</a-button>
+    </template>
+  </a-alert>
   <a-spin :spinning="loading">
     <!-- 待办统计卡 -->
     <a-row :gutter="16">
       <a-col v-for="card in statCards" :key="card.label" :span="6">
-        <div class="stat-card" :class="{ alert: card.value > 0 }" @click="goPage(card.to)">
+        <!-- 统计卡可点击跳转：补齐键盘可达性 -->
+        <div
+          class="stat-card"
+          :class="{ alert: card.value > 0 }"
+          role="button"
+          tabindex="0"
+          @click="goPage(card.to)"
+          @keydown.enter.prevent="goPage(card.to)"
+          @keydown.space.prevent="goPage(card.to)"
+        >
           <div class="stat-value" :class="{ danger: card.value > 0 }">
             <PointsNum :value="card.value" />
           </div>
@@ -217,6 +235,7 @@ onMounted(() => {
               type="primary"
               ghost
               :loading="jobRunning === job.key"
+              :disabled="jobRunning !== null && jobRunning !== job.key"
               @click="runJob(job.key)"
             >
               执行

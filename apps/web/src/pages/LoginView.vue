@@ -48,7 +48,7 @@ async function onSubmit(): Promise<void> {
       <a-card class="login-card">
         <h2 class="login-title">登录</h2>
         <p class="tip">账号由管理员分配，忘记密码请联系管理员。首次登录需修改初始密码。</p>
-        <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent>
+        <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent="onSubmit">
           <a-form-item label="学号 / 工号" name="username">
             <a-input v-model:value="form.username" autocomplete="username" placeholder="学号 / 工号" />
           </a-form-item>

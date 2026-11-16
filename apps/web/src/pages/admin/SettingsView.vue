@@ -12,14 +12,17 @@ function errMsg(e: unknown): string {
 }
 
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<ConfigRow[]>([]);
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await settingsApi.list();
     items.value = data.items;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -152,6 +155,12 @@ async function submitEdit(): Promise<void> {
 <template>
   <PageHeader title="系统参数设置" subtitle="提现 / 任务 / 安全 / 保留期等运行参数，修改即时生效" />
 
+  <a-alert v-if="loadError" type="error" message="系统参数加载失败" show-icon class="block mt16">
+    <template #action>
+      <a-button size="small" danger @click="load">重试</a-button>
+    </template>
+  </a-alert>
+
   <a-spin :spinning="loading">
     <a-card
       v-for="group in groups"
@@ -160,7 +169,7 @@ async function submitEdit(): Promise<void> {
       :class="{ mt16: group.title !== groups[0]?.title }"
       :title="group.title"
     >
-      <a-table :columns="paramColumns" :data-source="group.rows" :pagination="false" row-key="key">
+      <a-table :columns="paramColumns" :data-source="group.rows" :pagination="false" row-key="key" :scroll="{ x: 640 }">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'param'">
             <div class="param-name">
@@ -183,7 +192,7 @@ async function submitEdit(): Promise<void> {
     </a-card>
   </a-spin>
 
-  <a-modal v-model:open="dialogOpen" :title="editing ? `编辑：${paramNames[editing.key] ?? editing.key}` : '编辑参数'" :width="480">
+  <a-modal v-model:open="dialogOpen" :title="editing ? `编辑：${paramNames[editing.key] ?? editing.key}` : '编辑参数'" :width="480" :mask-closable="false" :keyboard="false">
     <template v-if="editing">
       <a-alert
         v-if="editing.key === 'POINT_TO_CASH_RATE'"
@@ -203,7 +212,7 @@ async function submitEdit(): Promise<void> {
       </a-form>
     </template>
     <template #footer>
-      <a-button @click="dialogOpen = false">取消</a-button>
+      <a-button :disabled="saving" @click="dialogOpen = false">取消</a-button>
       <a-button type="primary" :loading="saving" @click="submitEdit">保存</a-button>
     </template>
   </a-modal>

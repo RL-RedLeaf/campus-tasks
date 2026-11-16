@@ -48,10 +48,13 @@ const roleLabels: Record<string, string> = { STUDENT: '学生', TEACHER: '教师
 
 const activeStatus = ref('OPEN');
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<DisputeRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
+/** 行内异步操作进行中的行 id：防重复提交（PRD §11.4） */
+const operatingId = ref<string | null>(null);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -63,7 +66,9 @@ async function load(): Promise<void> {
     });
     items.value = data.items;
     total.value = data.total;
+    loadError.value = false;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -135,6 +140,7 @@ async function submitResolve(): Promise<void> {
     return;
   }
   resolveLoading.value = true;
+  operatingId.value = resolveTask.value.id;
   try {
     await disputesApi.resolve(resolveTask.value.id, {
       decision: resolveForm.decision as 'PAY_FULL' | 'PAY_PARTIAL' | 'REJECT',
@@ -148,6 +154,7 @@ async function submitResolve(): Promise<void> {
     message.error(errMsg(e));
   } finally {
     resolveLoading.value = false;
+    operatingId.value = null;
   }
 }
 </script>
@@ -186,7 +193,10 @@ async function submitResolve(): Promise<void> {
           <a-button v-if="record.status === 'OPEN'" type="link" size="small" class="op-link op-warning" @click="openResolve(record as DisputeRow)">裁定</a-button>
         </template>
       </template>
-      <template #emptyText><EmptyState description="该状态下暂无仲裁" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="该状态下暂无仲裁" />
+      </template>
     </a-table>
 
     <div class="pager">
@@ -225,7 +235,7 @@ async function submitResolve(): Promise<void> {
   </a-drawer>
 
   <!-- 裁定对话框 -->
-  <a-modal v-model:open="resolveOpen" :title="resolveTask ? `裁定仲裁 #${resolveTask.id}` : '裁定仲裁'" :width="480">
+  <a-modal v-model:open="resolveOpen" :title="resolveTask ? `裁定仲裁 #${resolveTask.id}` : '裁定仲裁'" :width="480" :mask-closable="false" :keyboard="false">
     <a-form ref="resolveFormRef" :model="resolveForm" :rules="resolveRules" :label-col="{ style: { width: '100px' } }">
       <a-form-item label="裁定结果" name="decision">
         <a-radio-group v-model:value="resolveForm.decision">
@@ -243,7 +253,7 @@ async function submitResolve(): Promise<void> {
       </a-form-item>
     </a-form>
     <template #footer>
-      <a-button @click="resolveOpen = false">取消</a-button>
+      <a-button :disabled="resolveLoading" @click="resolveOpen = false">取消</a-button>
       <a-button type="primary" :loading="resolveLoading" @click="submitResolve">确认裁定</a-button>
     </template>
   </a-modal>

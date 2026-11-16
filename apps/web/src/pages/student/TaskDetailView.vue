@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { confirm, message, prompt } from '@/composables/feedback';
+import { ClockCircleOutlined } from '@ant-design/icons-vue';
 import { communityApi } from '@/api/admin';
 import { submissionsApi, tasksApi, type TaskSummary } from '@/api/tasks';
 import { useAuthStore } from '@/stores/auth';
@@ -220,9 +221,9 @@ onBeforeUnmount(() => {
       </div>
 
       <a-card class="block">
-        <a-descriptions :column="3" bordered>
+        <a-descriptions :column="{ xs: 1, sm: 2, lg: 3 }" bordered>
           <a-descriptions-item label="发布教师">{{ task.teacher?.name ?? '—' }}</a-descriptions-item>
-          <a-descriptions-item label="单人赏金">
+          <a-descriptions-item label="单人积分">
             <span class="reward"><PointsNum :value="task.rewardPerPerson ?? 0" suffix="分" /></span>
           </a-descriptions-item>
           <a-descriptions-item label="名额">
@@ -231,7 +232,8 @@ onBeforeUnmount(() => {
           <a-descriptions-item label="截止时间" :span="2">
             {{ fmtTime(task.deadlineAt) }}
             <span class="deadline" :style="deadlineUrgent ? { color: 'var(--sasu-color-danger)' } : {}">
-              （{{ remainingText(task.deadlineAt) }}）
+              <ClockCircleOutlined v-if="deadlineUrgent" />
+              （{{ deadlineUrgent ? '即将截止 · ' : '' }}{{ remainingText(task.deadlineAt) }}）
             </span>
           </a-descriptions-item>
           <a-descriptions-item label="地点">{{ task.location || '不限' }}</a-descriptions-item>
@@ -345,6 +347,9 @@ onBeforeUnmount(() => {
 }
 .deadline {
   font-size: 13px;
+}
+.deadline .anticon {
+  margin-right: 2px;
 }
 .pre-wrap {
   white-space: pre-wrap;

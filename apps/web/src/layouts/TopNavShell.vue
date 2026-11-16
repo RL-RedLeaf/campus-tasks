@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { BellOutlined } from '@ant-design/icons-vue';
 import { labelOf } from '@sasu/shared';
@@ -16,9 +16,21 @@ const isStudent = computed(() => auth.role === 'STUDENT');
 const isTeacher = computed(() => auth.role === 'TEACHER' || auth.role === 'ADMIN');
 
 const roleLabel = labelOf.role;
+/** 用户下拉受控开合，便于键盘 Enter 触发。 */
+const userMenuOpen = ref(false);
+
+/** 导航高亮映射：详情 / 执行等子路由也保持父级导航高亮。 */
+const ACTIVE_ROUTE_MAP: Record<string, readonly string[]> = {
+  home: ['home'],
+  hall: ['hall', 'task-detail'],
+  'my-tasks': ['my-tasks', 'task-exec'],
+  points: ['points'],
+  'teacher-tasks': ['teacher-tasks', 'teacher-task'],
+};
 
 function isActive(name: string): boolean {
-  return route.name === name;
+  const names = ACTIVE_ROUTE_MAP[name];
+  return (names ?? [name]).includes(String(route.name));
 }
 
 async function onLogout(): Promise<void> {
@@ -34,10 +46,10 @@ if (auth.isLoggedIn) notify.startPolling();
   <div class="top-shell">
     <header class="topbar">
       <div class="topbar-inner">
-        <div class="brand" @click="router.push('/')">
+        <RouterLink to="/" class="brand">
           <img class="brand-badge" src="/school-badge.png" alt="上海科技大学附属学校校徽" />
           <span class="brand-name">校园任务平台</span>
-        </div>
+        </RouterLink>
         <nav class="nav">
           <RouterLink class="nav-item" :class="{ active: isActive('home') }" to="/">首页</RouterLink>
           <RouterLink class="nav-item" :class="{ active: isActive('hall') }" to="/tasks">任务大厅</RouterLink>
@@ -60,7 +72,7 @@ if (auth.isLoggedIn) notify.startPolling();
           <template v-if="isTeacher">
             <RouterLink
               class="nav-item"
-              :class="{ active: isActive('teacher-tasks') || isActive('teacher-task') }"
+              :class="{ active: isActive('teacher-tasks') }"
               to="/teacher/tasks"
             >
               任务管理
@@ -74,14 +86,26 @@ if (auth.isLoggedIn) notify.startPolling();
               <BellOutlined />
             </a-badge>
           </RouterLink>
-          <a-dropdown v-if="auth.user">
-            <span class="user-chip">
+          <a-dropdown v-if="auth.user" v-model:open="userMenuOpen">
+            <span
+              class="user-chip sasu-keyable"
+              role="button"
+              tabindex="0"
+              @keydown.enter.prevent="userMenuOpen = !userMenuOpen"
+            >
               <span class="avatar">{{ auth.user.name.slice(0, 1) }}</span>
               <span class="user-name">{{ auth.user.name }}</span>
               <span class="user-role">{{ roleLabel(auth.user.role) }}</span>
             </span>
             <template #overlay>
               <a-menu>
+                <a-menu-item
+                  v-if="isStudent"
+                  key="my-disputes"
+                  @click="router.push('/my/disputes')"
+                >
+                  我的争议
+                </a-menu-item>
                 <a-menu-item key="profile" @click="router.push('/profile')">个人中心</a-menu-item>
                 <a-menu-divider />
                 <a-menu-item key="logout" @click="onLogout">退出登录</a-menu-item>
@@ -127,6 +151,7 @@ if (auth.isLoggedIn) notify.startPolling();
   gap: 9px;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
 }
 .brand-badge {
   width: 30px;

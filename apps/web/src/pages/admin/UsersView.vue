@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { confirm, message, prompt } from '@/composables/feedback';
 import type { FormInstance } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
+import { UploadOutlined } from '@ant-design/icons-vue';
 import type { NormalizedError } from '@/api/http';
 import { statsApi, usersApi, type UserRow } from '@/api/admin';
 import PageHeader from '@/components/PageHeader.vue';
@@ -55,12 +56,15 @@ const errColumns: TableColumnsType = [
 
 // ---------- 列表 ----------
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<UserRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
 // role/status 用 undefined 而非 ''：a-select 只有在 value 为 undefined 时才显示 placeholder
 const filters = reactive({ keyword: '', role: undefined as string | undefined, status: undefined as string | undefined });
+/** 行内异步操作进行中的行 id：防重复提交 + 同行按钮禁用（PRD §11.4） */
+const operatingId = ref<string | null>(null);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -74,7 +78,9 @@ async function load(): Promise<void> {
     });
     items.value = data.items;
     total.value = data.total;
+    loadError.value = false;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -143,6 +149,15 @@ const editFormRef = ref<FormInstance>();
 const editLoading = ref(false);
 const editId = ref('');
 const editForm = reactive({ name: '', role: 'STUDENT', className: '', email: '' });
+/** 打开弹窗时的字段快照，用于 dirty 判断（未保存修改时取消需确认） */
+const editSnapshot = reactive({ name: '', role: 'STUDENT', className: '', email: '' });
+const editDirty = computed(
+  () =>
+    editForm.name !== editSnapshot.name ||
+    editForm.role !== editSnapshot.role ||
+    editForm.className !== editSnapshot.className ||
+    editForm.email !== editSnapshot.email,
+);
 
 const editRules: Record<string, Rule[]> = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
@@ -157,7 +172,25 @@ function openEdit(row: UserRow): void {
     className: row.className ?? '',
     email: row.email ?? '',
   });
+  Object.assign(editSnapshot, editForm);
   editOpen.value = true;
+}
+
+/** 取消编辑：有未保存修改时先确认（§8.4 防误操作） */
+async function closeEdit(): Promise<void> {
+  if (editDirty.value) {
+    try {
+      await confirm({
+        title: '放弃修改？',
+        content: '未保存的修改将丢失',
+        okText: '放弃',
+        icon: 'warning',
+      });
+    } catch {
+      return;
+    }
+  }
+  editOpen.value = false;
 }
 
 async function submitEdit(): Promise<void> {
@@ -190,17 +223,23 @@ async function disableUser(row: UserRow): Promise<void> {
         message: '禁用后该用户将无法登录，请填写禁用原因（必填）。',
         placeholder: '请输入禁用原因',
         validate: (v: string) => (v && v.trim() ? true : '禁用原因不能为空'),
+        // 禁用不可逆且阻断登录：红色确认按钮（§8.4）
+        danger: true,
+        okText: '确认禁用',
       })
     ).trim();
   } catch {
     return;
   }
+  operatingId.value = row.id;
   try {
     await usersApi.disable(row.id, reason);
     message.success('已禁用');
     void load();
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+  } finally {
+    operatingId.value = null;
   }
 }
 
@@ -212,11 +251,19 @@ async function enableUser(row: UserRow): Promise<void> {
       icon: 'warning',
       okText: '确认启用',
     });
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    return;
+  }
+  operatingId.value = row.id;
+  try {
     await usersApi.enable(row.id);
     message.success('已启用');
     void load();
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+  } finally {
+    operatingId.value = null;
   }
 }
 
@@ -229,11 +276,19 @@ async function resetPassword(row: UserRow): Promise<void> {
       icon: 'warning',
       okText: '确认重置',
     });
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    return;
+  }
+  operatingId.value = row.id;
+  try {
     const res = await usersApi.resetPassword(row.id);
     createdPassword.value = res.initialPassword;
     createdUsername.value = row.username;
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+  } finally {
+    operatingId.value = null;
   }
 }
 
@@ -351,13 +406,45 @@ async function copyAllPasswords(): Promise<void> {
         <template v-else-if="column.key === 'status'"><StatusTag :status="record.status" /></template>
         <template v-else-if="column.key === 'lastLoginAt'">{{ fmtTime(record.lastLoginAt) }}</template>
         <template v-else-if="column.key === 'action'">
-          <a-button type="link" size="small" class="op-link" @click="openEdit(record as UserRow)">编辑</a-button>
-          <a-button v-if="record.status === 'ACTIVE'" type="link" size="small" class="op-link op-danger" @click="disableUser(record as UserRow)">禁用</a-button>
-          <a-button v-else type="link" size="small" class="op-link op-success" @click="enableUser(record as UserRow)">启用</a-button>
-          <a-button type="link" size="small" class="op-link op-warning" @click="resetPassword(record as UserRow)">重置密码</a-button>
+          <a-button type="link" size="small" class="op-link" :disabled="operatingId !== null" @click="openEdit(record as UserRow)">编辑</a-button>
+          <a-button
+            v-if="record.status === 'ACTIVE'"
+            type="link"
+            size="small"
+            class="op-link op-danger"
+            :loading="operatingId === record.id"
+            :disabled="operatingId !== null"
+            @click="disableUser(record as UserRow)"
+          >
+            禁用
+          </a-button>
+          <a-button
+            v-else
+            type="link"
+            size="small"
+            class="op-link op-success"
+            :loading="operatingId === record.id"
+            :disabled="operatingId !== null"
+            @click="enableUser(record as UserRow)"
+          >
+            启用
+          </a-button>
+          <a-button
+            type="link"
+            size="small"
+            class="op-link op-warning"
+            :loading="operatingId === record.id"
+            :disabled="operatingId !== null"
+            @click="resetPassword(record as UserRow)"
+          >
+            重置密码
+          </a-button>
         </template>
       </template>
-      <template #emptyText><EmptyState description="没有符合条件的用户" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="没有符合条件的用户" />
+      </template>
     </a-table>
 
     <div class="pager">
@@ -395,9 +482,11 @@ async function copyAllPasswords(): Promise<void> {
     :open="!!createdPassword"
     title="初始密码（仅本次展示）"
     :width="440"
+    :mask-closable="false"
+    :keyboard="false"
     @cancel="createdPassword = ''"
   >
-    <a-alert type="warning" show-icon message="请立即复制并告知用户，关闭后不再显示。" />
+    <a-alert type="warning" show-icon message="初始密码仅本次展示，关闭后将无法再次查看，请先复制保存。" />
     <div class="pwd-box">
       <div class="pwd-line"><span class="pwd-label">账号</span><b>{{ createdUsername }}</b></div>
       <div class="pwd-line"><span class="pwd-label">初始密码</span><b class="pwd">{{ createdPassword }}</b></div>
@@ -409,7 +498,7 @@ async function copyAllPasswords(): Promise<void> {
   </a-modal>
 
   <!-- 编辑对话框 -->
-  <a-modal v-model:open="editOpen" title="编辑用户" :width="480">
+  <a-modal v-model:open="editOpen" title="编辑用户" :width="480" :mask-closable="false" :keyboard="false">
     <a-form ref="editFormRef" :model="editForm" :rules="editRules" :label-col="{ style: { width: '100px' } }">
       <a-form-item label="姓名" name="name">
         <a-input v-model:value="editForm.name" />
@@ -425,7 +514,7 @@ async function copyAllPasswords(): Promise<void> {
       </a-form-item>
     </a-form>
     <template #footer>
-      <a-button @click="editOpen = false">取消</a-button>
+      <a-button :disabled="editLoading" @click="closeEdit">取消</a-button>
       <a-button type="primary" :loading="editLoading" @click="submitEdit">保存</a-button>
     </template>
   </a-modal>
@@ -439,7 +528,7 @@ async function copyAllPasswords(): Promise<void> {
     />
     <a-upload-dragger accept=".xlsx,.xls" :before-upload="beforeUpload" @remove="onRemove">
       <p class="ant-upload-drag-icon">
-        <span class="drag-icon">⬆️</span>
+        <UploadOutlined class="drag-icon" />
       </p>
       <p class="ant-upload-text">拖拽文件到此处，或点击选择</p>
       <p class="ant-upload-hint">仅支持 .xlsx / .xls</p>

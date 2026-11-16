@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { message } from '@/composables/feedback';
+import { confirm, message } from '@/composables/feedback';
+import { ClockCircleOutlined } from '@ant-design/icons-vue';
 import { Upload as AUpload, type UploadFile } from 'ant-design-vue';
+import type { FormInstance } from 'ant-design-vue';
+import type { Rule } from 'ant-design-vue/es/form';
 import { submissionsApi, tasksApi, type TaskSummary } from '@/api/tasks';
 import type { NormalizedError } from '@/api/http';
 import EmptyState from '@/components/EmptyState.vue';
@@ -59,9 +62,20 @@ const assignment = ref<HistoryData | null>(null);
 const task = ref<TaskSummary | null>(null);
 const loading = ref(false);
 
-const content = ref('');
 const fileList = ref<UploadFile[]>([]);
 const submitting = ref(false);
+/** 正在上传中的附件数（antd change 事件里 status === 'uploading' 的文件数），>0 时禁用提交 */
+const uploadingCount = ref(0);
+
+// ---------- 表单校验（PRD §11.4：错误就地提示） ----------
+const formRef = ref<FormInstance>();
+const formState = reactive({ content: '' });
+const rules: Record<string, Rule[]> = {
+  content: [
+    { required: true, message: '请填写文字说明', trigger: 'blur' },
+    { min: 10, max: 1000, message: '文字说明需 10-1000 字', trigger: 'change' },
+  ],
+};
 
 const now = ref(Date.now());
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -155,14 +169,26 @@ function beforeUpload(file: File): boolean | string {
 
 function onFileChange(info: { fileList: UploadFile[] }): void {
   fileList.value = info.fileList.slice(0, MAX_FILES);
+  uploadingCount.value = fileList.value.filter((f) => f.status === 'uploading').length;
 }
 
 async function onSubmit(): Promise<void> {
-  const text = content.value.trim();
-  if (text.length < 10 || text.length > 1000) {
-    message.warning('文字说明需 10-1000 字');
+  // 先表单校验（错误就地显示在输入框下方），再二次确认（提交后不可修改）
+  try {
+    await formRef.value?.validate();
+  } catch {
     return;
   }
+  try {
+    await confirm({
+      title: '提交交付物',
+      content: '提交后不可修改，确认提交？',
+      okText: '确认提交',
+    });
+  } catch {
+    return;
+  }
+  const text = formState.content.trim();
   const files = fileList.value
     .map((f) => f.originFileObj as File | undefined)
     .filter((f): f is File => f instanceof File);
@@ -170,8 +196,10 @@ async function onSubmit(): Promise<void> {
   try {
     const res = await submissionsApi.submit(assignmentId.value, text, files);
     message.success(`提交成功，当前为第 ${res.version} 版，等待教师验收`);
-    content.value = '';
+    formState.content = '';
     fileList.value = [];
+    uploadingCount.value = 0;
+    formRef.value?.clearValidate();
     await load();
   } catch (e) {
     message.error((e as NormalizedError).friendlyMessage ?? '提交失败');
@@ -232,10 +260,10 @@ onBeforeUnmount(() => {
           <a-button type="link" class="summary-title" @click="router.push(`/tasks/${task.id}`)">
             {{ task.title }}
           </a-button>
-          <a-descriptions :column="3" class="summary-desc">
+          <a-descriptions :column="{ xs: 1, sm: 2, lg: 3 }" class="summary-desc">
             <a-descriptions-item label="分类">{{ task.category?.name ?? '—' }}</a-descriptions-item>
             <a-descriptions-item label="教师">{{ task.teacher?.name ?? '—' }}</a-descriptions-item>
-            <a-descriptions-item label="单人赏金">
+            <a-descriptions-item label="单人积分">
               <PointsNum :value="task.rewardPerPerson ?? 0" suffix="分" />
             </a-descriptions-item>
             <a-descriptions-item label="接单时间">{{ fmtTime(assignment.claimedAt) }}</a-descriptions-item>
@@ -269,7 +297,8 @@ onBeforeUnmount(() => {
         <template #message>
           第 {{ assignment.rejectCount }} 次被驳回，请在重交窗口内重新提交
           <span :style="resubmitUrgent ? { color: 'var(--sasu-color-danger)', fontWeight: 600 } : {}">
-            （重交截止 {{ fmtTime(assignment.resubmitDeadline) }}，{{ resubmitLeft }}）
+            <ClockCircleOutlined v-if="resubmitUrgent" />
+            （重交截止 {{ fmtTime(assignment.resubmitDeadline) }}，{{ resubmitUrgent ? '即将截止 · ' : '' }}{{ resubmitLeft }}）
           </span>
         </template>
         <template #description>
@@ -312,10 +341,10 @@ onBeforeUnmount(() => {
 
       <!-- 提交表单 -->
       <a-card v-if="isActiveStatus" class="block" title="提交交付物">
-        <a-form layout="vertical" @submit.prevent="onSubmit">
-          <a-form-item label="文字说明（10-1000 字，提交后不可修改）">
+        <a-form ref="formRef" :model="formState" :rules="rules" layout="vertical" @submit.prevent="onSubmit">
+          <a-form-item name="content" label="文字说明（10-1000 字，提交后不可修改）">
             <a-textarea
-              v-model:value="content"
+              v-model:value="formState.content"
               :rows="6"
               :maxlength="1000"
               show-count
@@ -333,8 +362,16 @@ onBeforeUnmount(() => {
             </a-upload>
             <div class="upload-tip">支持任意格式，图片 / 文档可直接给教师下载查看</div>
           </a-form-item>
-          <a-button type="primary" :loading="submitting" @click="onSubmit">提交交付物</a-button>
-          <span v-if="status === 'REJECTED'" class="tip">本次提交将作为新版本（v{{ assignment.rejectCount + 1 }}）</span>
+          <a-button
+            type="primary"
+            :loading="submitting"
+            :disabled="uploadingCount > 0"
+            @click="onSubmit"
+          >
+            提交交付物
+          </a-button>
+          <span v-if="uploadingCount > 0" class="tip">附件正在上传，请稍候…</span>
+          <span v-else-if="status === 'REJECTED'" class="tip">本次提交将作为新版本（v{{ assignment.rejectCount + 1 }}）</span>
         </a-form>
       </a-card>
 

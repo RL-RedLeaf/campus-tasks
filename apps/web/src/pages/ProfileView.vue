@@ -69,15 +69,15 @@ async function onSubmit(): Promise<void> {
     </a-col>
     <a-col :span="14">
       <a-card class="block" title="修改密码">
-        <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent>
+        <a-form ref="formRef" :model="form" :rules="rules" layout="vertical" @submit.prevent="onSubmit">
           <a-form-item label="当前密码" name="oldPassword">
-            <a-input-password v-model:value="form.oldPassword" />
+            <a-input-password v-model:value="form.oldPassword" autocomplete="current-password" />
           </a-form-item>
           <a-form-item label="新密码（≥8 位，含字母和数字）" name="newPassword">
-            <a-input-password v-model:value="form.newPassword" />
+            <a-input-password v-model:value="form.newPassword" autocomplete="new-password" />
           </a-form-item>
           <a-form-item label="确认新密码" name="confirm">
-            <a-input-password v-model:value="form.confirm" />
+            <a-input-password v-model:value="form.confirm" autocomplete="new-password" />
           </a-form-item>
           <a-button type="primary" html-type="submit" :loading="loading" @click="onSubmit">修改密码</a-button>
         </a-form>

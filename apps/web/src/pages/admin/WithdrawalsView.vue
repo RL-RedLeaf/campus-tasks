@@ -40,10 +40,13 @@ const TABS = [
 
 const activeStatus = ref('PENDING');
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<WithdrawalRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
+/** 行内异步操作进行中的行 id：防重复提交 + 同行按钮禁用（PRD §11.4） */
+const operatingId = ref<string | null>(null);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -55,7 +58,9 @@ async function load(): Promise<void> {
     });
     items.value = data.items;
     total.value = data.total;
+    loadError.value = false;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -78,9 +83,16 @@ async function approve(row: WithdrawalRow): Promise<void> {
       icon: 'warning',
       okText: '确认通过',
     });
-    await withdrawalsApi.approve(row.id);
-    message.success('已通过，进入待发放');
-    void load();
+    operatingId.value = row.id;
+    try {
+      await withdrawalsApi.approve(row.id);
+      message.success('已通过，进入待发放');
+      void load();
+    } catch (e) {
+      if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    } finally {
+      operatingId.value = null;
+    }
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
   }
@@ -96,11 +108,19 @@ async function reject(row: WithdrawalRow): Promise<void> {
         message: '驳回后冻结积分将退回学生可用余额，请填写驳回理由（必填，学生可见）。',
         placeholder: '请填写驳回理由',
         validate: (v: string) => (v && v.trim() ? true : '驳回理由不能为空'),
+        okText: '确认驳回',
       })
     ).trim();
-    await withdrawalsApi.reject(row.id, reason);
-    message.success('已驳回，积分已退回');
-    void load();
+    operatingId.value = row.id;
+    try {
+      await withdrawalsApi.reject(row.id, reason);
+      message.success('已驳回，积分已退回');
+      void load();
+    } catch (e) {
+      if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    } finally {
+      operatingId.value = null;
+    }
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
   }
@@ -116,11 +136,19 @@ async function markPaid(row: WithdrawalRow): Promise<void> {
         message: '请确认已线下现金发放，填写发放备注（如：现金签收单编号）。',
         placeholder: '发放备注',
         validate: (v: string) => (v && v.trim() ? true : '发放备注不能为空'),
+        okText: '确认发放',
       })
     ).trim();
-    await withdrawalsApi.pay(row.id, note, crypto.randomUUID());
-    message.success('已标记发放');
-    void load();
+    operatingId.value = row.id;
+    try {
+      await withdrawalsApi.pay(row.id, note, crypto.randomUUID());
+      message.success('已标记发放');
+      void load();
+    } catch (e) {
+      if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    } finally {
+      operatingId.value = null;
+    }
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
   }
@@ -153,10 +181,36 @@ async function markPaid(row: WithdrawalRow): Promise<void> {
         <template v-else-if="column.key === 'status'"><StatusTag :status="record.status" /></template>
         <template v-else-if="column.key === 'action'">
           <template v-if="record.status === 'PENDING'">
-            <a-button type="link" size="small" class="op-link" @click="approve(record as WithdrawalRow)">通过</a-button>
-            <a-button type="link" size="small" class="op-link op-danger" @click="reject(record as WithdrawalRow)">驳回</a-button>
+            <a-button
+              type="link"
+              size="small"
+              class="op-link"
+              :loading="operatingId === record.id"
+              :disabled="operatingId !== null"
+              @click="approve(record as WithdrawalRow)"
+            >
+              通过
+            </a-button>
+            <a-button
+              type="link"
+              size="small"
+              class="op-link op-danger"
+              :loading="operatingId === record.id"
+              :disabled="operatingId !== null"
+              @click="reject(record as WithdrawalRow)"
+            >
+              驳回
+            </a-button>
           </template>
-          <a-button v-else-if="record.status === 'APPROVED'" type="link" size="small" class="op-link op-success" @click="markPaid(record as WithdrawalRow)">
+          <a-button
+            v-else-if="record.status === 'APPROVED'"
+            type="link"
+            size="small"
+            class="op-link op-success"
+            :loading="operatingId === record.id"
+            :disabled="operatingId !== null"
+            @click="markPaid(record as WithdrawalRow)"
+          >
             标记已发放
           </a-button>
           <template v-else-if="record.status === 'REJECTED'">
@@ -164,7 +218,10 @@ async function markPaid(row: WithdrawalRow): Promise<void> {
           </template>
         </template>
       </template>
-      <template #emptyText><EmptyState description="该状态下暂无申请" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="该状态下暂无申请" />
+      </template>
     </a-table>
 
     <div class="pager">

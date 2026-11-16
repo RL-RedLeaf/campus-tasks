@@ -21,14 +21,17 @@ const columns: TableColumnsType = [
 ];
 
 const loading = ref(false);
+const loadError = ref(false);
 const items = ref<CategoryRow[]>([]);
 
 async function load(): Promise<void> {
   loading.value = true;
+  loadError.value = false;
   try {
     const data = await categoriesApi.list();
     items.value = [...data.items].sort((a, b) => a.sortOrder - b.sortOrder);
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -115,6 +118,7 @@ async function remove(row: CategoryRow): Promise<void> {
       :loading="loading"
       :pagination="false"
       row-key="id"
+      :scroll="{ x: 640 }"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'description'">{{ record.description ?? '—' }}</template>
@@ -123,11 +127,14 @@ async function remove(row: CategoryRow): Promise<void> {
           <a-button type="link" size="small" class="op-link op-danger" @click="remove(record as CategoryRow)">删除</a-button>
         </template>
       </template>
-      <template #emptyText><EmptyState description="还没有分类，点击右上角新建" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="还没有分类，点击右上角新建" />
+      </template>
     </a-table>
   </a-card>
 
-  <a-modal v-model:open="dialogOpen" :title="editingId ? '编辑分类' : '新建分类'" :width="440">
+  <a-modal v-model:open="dialogOpen" :title="editingId ? '编辑分类' : '新建分类'" :width="440" :mask-closable="false" :keyboard="false">
     <a-form ref="formRef" :model="form" :rules="rules" :label-col="{ style: { width: '90px' } }">
       <a-form-item label="分类名称" name="name">
         <a-input v-model:value="form.name" :maxlength="20" placeholder="如：卫生劳动、活动协助" />
@@ -141,7 +148,7 @@ async function remove(row: CategoryRow): Promise<void> {
       </a-form-item>
     </a-form>
     <template #footer>
-      <a-button @click="dialogOpen = false">取消</a-button>
+      <a-button :disabled="saving" @click="dialogOpen = false">取消</a-button>
       <a-button type="primary" :loading="saving" @click="submit">保存</a-button>
     </template>
   </a-modal>

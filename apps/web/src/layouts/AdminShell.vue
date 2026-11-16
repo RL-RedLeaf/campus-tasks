@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   AccountBookOutlined,
+  AppstoreOutlined,
   AuditOutlined,
   BarChartOutlined,
   BellOutlined,
@@ -33,6 +34,12 @@ interface MenuItem {
   icon: typeof DashboardOutlined;
 }
 
+/** 菜单分组（按职能） */
+interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
 const auth = useAuthStore();
 const notify = useNotificationStore();
 const route = useRoute();
@@ -43,27 +50,60 @@ const roleLabel = labelOf.role;
 
 const isAdmin = computed(() => auth.role === 'ADMIN');
 
-const adminMenu: MenuItem[] = [
+/** 管理端：工作台独立在最前，其余 12 项按职能分组（运营 / 资金 / 风控 / 系统）。 */
+const adminTop: MenuItem[] = [
   { key: 'admin-dashboard', path: '/admin', label: '工作台', icon: DashboardOutlined },
-  { key: 'admin-users', path: '/admin/users', label: '用户管理', icon: TeamOutlined },
-  { key: 'admin-tasks', path: '/admin/tasks', label: '任务定价', icon: ProfileOutlined },
-  { key: 'teacher-tasks', path: '/teacher/tasks', label: '任务验收', icon: FileDoneOutlined },
-  { key: 'admin-points', path: '/admin/points', label: '积分池', icon: WalletOutlined },
-  { key: 'admin-withdrawals', path: '/admin/withdrawals', label: '提现审批', icon: AccountBookOutlined },
-  { key: 'admin-disputes', path: '/admin/disputes', label: '仲裁处理', icon: AuditOutlined },
-  { key: 'admin-reports', path: '/admin/reports', label: '举报处理', icon: FlagOutlined },
-  { key: 'admin-announcements', path: '/admin/announcements', label: '公告管理', icon: NotificationOutlined },
-  { key: 'admin-audit', path: '/admin/audit', label: '审计日志', icon: FileSearchOutlined },
-  { key: 'admin-settings', path: '/admin/settings', label: '系统配置', icon: SettingOutlined },
-  { key: 'admin-stats', path: '/admin/stats', label: '平台统计', icon: BarChartOutlined },
+];
+
+const adminGroups: MenuGroup[] = [
+  {
+    title: '运营',
+    items: [
+      { key: 'admin-users', path: '/admin/users', label: '用户管理', icon: TeamOutlined },
+      { key: 'admin-categories', path: '/admin/categories', label: '任务分类', icon: AppstoreOutlined },
+      { key: 'admin-tasks', path: '/admin/tasks', label: '任务定价', icon: ProfileOutlined },
+      { key: 'teacher-tasks', path: '/teacher/tasks', label: '任务验收', icon: FileDoneOutlined },
+      {
+        key: 'admin-announcements',
+        path: '/admin/announcements',
+        label: '公告管理',
+        icon: NotificationOutlined,
+      },
+    ],
+  },
+  {
+    title: '资金',
+    items: [
+      { key: 'admin-points', path: '/admin/points', label: '积分池', icon: WalletOutlined },
+      {
+        key: 'admin-withdrawals',
+        path: '/admin/withdrawals',
+        label: '提现审批',
+        icon: AccountBookOutlined,
+      },
+    ],
+  },
+  {
+    title: '风控',
+    items: [
+      { key: 'admin-disputes', path: '/admin/disputes', label: '仲裁处理', icon: AuditOutlined },
+      { key: 'admin-reports', path: '/admin/reports', label: '举报处理', icon: FlagOutlined },
+      { key: 'admin-audit', path: '/admin/audit', label: '审计日志', icon: FileSearchOutlined },
+    ],
+  },
+  {
+    title: '系统',
+    items: [
+      { key: 'admin-settings', path: '/admin/settings', label: '系统配置', icon: SettingOutlined },
+      { key: 'admin-stats', path: '/admin/stats', label: '平台统计', icon: BarChartOutlined },
+    ],
+  },
 ];
 
 const teacherMenu: MenuItem[] = [
   { key: 'teacher-tasks', path: '/teacher/tasks', label: '我的任务', icon: FileDoneOutlined },
   { key: 'task-new', path: '/tasks/new', label: '发布任务', icon: PlusCircleOutlined },
 ];
-
-const menuItems = computed<MenuItem[]>(() => (isAdmin.value ? adminMenu : teacherMenu));
 
 const pageTitle = computed(() => (route.meta.title as string) ?? '');
 const selectedKeys = computed(() => [String(route.name)]);
@@ -73,6 +113,17 @@ async function onLogout(): Promise<void> {
   notify.stopPolling();
   void router.push('/login');
 }
+
+/** 小屏（<lg，即 <992px，与 sider breakpoint="lg" 一致）跳转后自动收起侧栏。 */
+function onMenuClick(path: string): void {
+  if (window.matchMedia('(max-width: 991px)').matches) collapsed.value = true;
+  void router.push(path);
+}
+
+onMounted(() => {
+  // 初始即处于小屏时（breakpoint 仅在跨过阈值时触发）先收起侧栏。
+  if (window.matchMedia('(max-width: 991px)').matches) collapsed.value = true;
+});
 
 if (auth.isLoggedIn) notify.startPolling();
 </script>
@@ -84,19 +135,34 @@ if (auth.isLoggedIn) notify.startPolling();
       :trigger="null"
       collapsible
       theme="light"
+      breakpoint="lg"
       :width="224"
       collapsed-width="64"
       class="sider"
     >
-      <div class="sider-brand" @click="router.push('/')">
+      <RouterLink to="/" class="sider-brand">
         <img class="brand-badge" src="/school-badge.png" alt="上海科技大学附属学校校徽" />
         <span v-if="!collapsed" class="brand-name">校园任务平台</span>
-      </div>
+      </RouterLink>
       <a-menu mode="inline" :selected-keys="selectedKeys" class="sider-menu">
-        <a-menu-item v-for="item in menuItems" :key="item.key" @click="router.push(item.path)">
-          <component :is="item.icon" class="menu-icon" />
-          <span>{{ item.label }}</span>
-        </a-menu-item>
+        <template v-if="isAdmin">
+          <a-menu-item v-for="item in adminTop" :key="item.key" @click="onMenuClick(item.path)">
+            <component :is="item.icon" class="menu-icon" />
+            <span>{{ item.label }}</span>
+          </a-menu-item>
+          <a-menu-item-group v-for="group in adminGroups" :key="group.title" :title="group.title">
+            <a-menu-item v-for="item in group.items" :key="item.key" @click="onMenuClick(item.path)">
+              <component :is="item.icon" class="menu-icon" />
+              <span>{{ item.label }}</span>
+            </a-menu-item>
+          </a-menu-item-group>
+        </template>
+        <template v-else>
+          <a-menu-item v-for="item in teacherMenu" :key="item.key" @click="onMenuClick(item.path)">
+            <component :is="item.icon" class="menu-icon" />
+            <span>{{ item.label }}</span>
+          </a-menu-item>
+        </template>
       </a-menu>
       <div class="sider-footer">
         <a-button type="text" class="collapse-btn" @click="collapsed = !collapsed">
@@ -163,6 +229,8 @@ if (auth.isLoggedIn) notify.startPolling();
   cursor: pointer;
   border-bottom: 1px solid var(--sasu-border);
   flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
 }
 .brand-badge {
   width: 30px;
@@ -191,6 +259,15 @@ if (auth.isLoggedIn) notify.startPolling();
   background: var(--sasu-color-primary-light-bg);
   color: var(--sasu-color-primary);
   font-weight: 500;
+}
+.sider-menu :deep(.ant-menu-item-group-title) {
+  padding: 12px 16px 4px;
+  color: var(--sasu-text-tertiary);
+  font-size: 12px;
+}
+/* 折叠态（含小屏自动折叠）隐藏分组标题，避免 64px 宽度下文字挤压。 */
+.sider-menu :deep(.ant-menu-inline-collapsed .ant-menu-item-group-title) {
+  display: none;
 }
 .menu-icon {
   font-size: 15px;

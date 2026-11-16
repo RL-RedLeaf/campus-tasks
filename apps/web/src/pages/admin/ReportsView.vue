@@ -42,6 +42,7 @@ const TABS = [
 
 const activeStatus = ref('OPEN');
 const loading = ref(false);
+const loadError = ref(false);
 interface ReportRow {
   id: string;
   targetType: string;
@@ -55,6 +56,8 @@ const items = ref<ReportRow[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
+/** 行内异步操作进行中的行 id：防重复提交 + 同行按钮禁用（PRD §11.4） */
+const operatingId = ref<string | null>(null);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -66,7 +69,9 @@ async function load(): Promise<void> {
     });
     items.value = data.items as ReportRow[];
     total.value = data.total;
+    loadError.value = false;
   } catch (e) {
+    loadError.value = true;
     message.error(errMsg(e));
   } finally {
     loading.value = false;
@@ -98,11 +103,19 @@ async function handleReport(row: ReportRow): Promise<void> {
         message: `${targetHint} 请填写处理备注（必填）。`,
         placeholder: '处理备注，如：已强制下架该任务',
         validate: (v: string) => (v && v.trim() ? true : '处理备注不能为空'),
+        okText: '确认处理',
       })
     ).trim();
-    await communityApi.handleReport(row.id, { note });
-    message.success('举报已标记处理');
-    void load();
+    operatingId.value = row.id;
+    try {
+      await communityApi.handleReport(row.id, { note });
+      message.success('举报已标记处理');
+      void load();
+    } catch (e) {
+      if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    } finally {
+      operatingId.value = null;
+    }
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
   }
@@ -118,11 +131,19 @@ async function dismissReport(row: ReportRow): Promise<void> {
         message: '确认驳回该举报吗？驳回表示举报内容不成立，请填写理由（必填）。',
         placeholder: '驳回理由',
         validate: (v: string) => (v && v.trim() ? true : '驳回理由不能为空'),
+        okText: '确认驳回',
       })
     ).trim();
-    await communityApi.handleReport(row.id, { dismiss: true, note: reason });
-    message.success('举报已驳回');
-    void load();
+    operatingId.value = row.id;
+    try {
+      await communityApi.handleReport(row.id, { dismiss: true, note: reason });
+      message.success('举报已驳回');
+      void load();
+    } catch (e) {
+      if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
+    } finally {
+      operatingId.value = null;
+    }
   } catch (e) {
     if (e !== 'cancel' && e !== 'close') message.error(errMsg(e));
   }
@@ -163,12 +184,33 @@ async function dismissReport(row: ReportRow): Promise<void> {
         </template>
         <template v-else-if="column.key === 'action'">
           <template v-if="record.status === 'OPEN'">
-            <a-button type="link" size="small" class="op-link" @click="handleReport(record as ReportRow)">处理</a-button>
-            <a-button type="link" size="small" class="op-link op-danger" @click="dismissReport(record as ReportRow)">驳回举报</a-button>
+            <a-button
+              type="link"
+              size="small"
+              class="op-link"
+              :loading="operatingId === record.id"
+              :disabled="operatingId !== null"
+              @click="handleReport(record as ReportRow)"
+            >
+              处理
+            </a-button>
+            <a-button
+              type="link"
+              size="small"
+              class="op-link op-danger"
+              :loading="operatingId === record.id"
+              :disabled="operatingId !== null"
+              @click="dismissReport(record as ReportRow)"
+            >
+              驳回举报
+            </a-button>
           </template>
         </template>
       </template>
-      <template #emptyText><EmptyState description="该状态下暂无举报" /></template>
+      <template #emptyText>
+        <EmptyState v-if="loadError" error @retry="load" />
+        <EmptyState v-else description="该状态下暂无举报" />
+      </template>
     </a-table>
 
     <div class="pager">
