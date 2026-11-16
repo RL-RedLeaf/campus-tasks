@@ -189,8 +189,8 @@ const allTotal = ref(0);
 const allTxColumns: TableColumnsType = [
   { title: '时间', key: 'createdAt', width: 170 },
   { title: '类型', key: 'type', width: 130 },
-  { title: '原因', key: 'reason', ellipsis: true },
-  { title: '分录', key: 'legs' },
+  { title: '原因', key: 'reason', width: 180, ellipsis: true },
+  { title: '分录', key: 'legs', width: 280 },
 ];
 
 async function loadAllTxs(): Promise<void> {

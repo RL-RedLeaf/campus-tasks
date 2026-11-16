@@ -13,7 +13,9 @@ const route = useRoute();
 const router = useRouter();
 
 const isStudent = computed(() => auth.role === 'STUDENT');
-const isTeacher = computed(() => auth.role === 'TEACHER' || auth.role === 'ADMIN');
+// 仅教师显示工作台入口；ADMIN 的管理功能收敛在 AdminShell 侧边栏，
+// 公共区保持纯浏览视角，避免顶栏/侧栏两套布局来回穿插
+const isTeacher = computed(() => auth.role === 'TEACHER');
 
 const roleLabel = labelOf.role;
 /** 用户下拉受控开合，便于键盘 Enter 触发。 */

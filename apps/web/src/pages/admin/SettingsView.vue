@@ -90,7 +90,7 @@ function valueText(row: ConfigRow): string {
 }
 
 const paramColumns: TableColumnsType = [
-  { title: '参数', key: 'param' },
+  { title: '参数', key: 'param', width: 320 },
   { title: '当前值', key: 'value', width: 220 },
   { title: '操作', key: 'action', width: 100, fixed: 'right' },
 ];

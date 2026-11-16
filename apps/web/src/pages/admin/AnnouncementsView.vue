@@ -22,8 +22,8 @@ function fmtTime(value: string | null): string {
 const statusLabels: Record<string, string> = { DRAFT: '草稿', PUBLISHED: '发布', OFFLINE: '下线' };
 
 const columns: TableColumnsType = [
-  { title: '标题', dataIndex: 'title', key: 'title', ellipsis: true },
-  { title: '内容', dataIndex: 'content', key: 'content', ellipsis: true },
+  { title: '标题', dataIndex: 'title', key: 'title', width: 180, ellipsis: true },
+  { title: '内容', dataIndex: 'content', key: 'content', width: 220, ellipsis: true },
   { title: '状态', key: 'status', width: 90 },
   { title: '发布时间', key: 'publishedAt', width: 170 },
   { title: '创建时间', key: 'createdAt', width: 170 },
@@ -129,7 +129,7 @@ async function remove(row: AnnouncementRow): Promise<void> {
       :loading="loading"
       :pagination="false"
       row-key="id"
-      :scroll="{ x: 960 }"
+      :scroll="{ x: 980 }"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'status'"><StatusTag :status="statusLabels[record.status as string] ?? record.status" /></template>

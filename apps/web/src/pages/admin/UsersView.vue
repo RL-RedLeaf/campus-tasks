@@ -5,12 +5,19 @@ import type { FormInstance } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
 import { UploadOutlined } from '@ant-design/icons-vue';
 import type { NormalizedError } from '@/api/http';
+import { useAuthStore } from '@/stores/auth';
 import { statsApi, usersApi, type UserRow } from '@/api/admin';
 import PageHeader from '@/components/PageHeader.vue';
 import StatusTag from '@/components/StatusTag.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import AppPagination from '@/components/AppPagination.vue';
 import type { TableColumnsType } from 'ant-design-vue';
+
+const auth = useAuthStore();
+/** 是否本人所在行：后端禁止自我禁用（users.service setStatus），前端直接藏入口 */
+function isSelf(record: UserRow): boolean {
+  return auth.user?.id != null && String(auth.user.id) === record.id.toString();
+}
 
 function errMsg(e: unknown): string {
   return (e as NormalizedError).friendlyMessage ?? '操作失败';
@@ -408,7 +415,7 @@ async function copyAllPasswords(): Promise<void> {
         <template v-else-if="column.key === 'action'">
           <a-button type="link" size="small" class="op-link" :disabled="operatingId !== null" @click="openEdit(record as UserRow)">编辑</a-button>
           <a-button
-            v-if="record.status === 'ACTIVE'"
+            v-if="record.status === 'ACTIVE' && !isSelf(record as UserRow)"
             type="link"
             size="small"
             class="op-link op-danger"

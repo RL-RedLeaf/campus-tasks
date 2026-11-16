@@ -33,10 +33,10 @@ const decisionLabel: Record<string, string> = {
 
 const columns: TableColumnsType = [
   { title: '关联任务', key: 'taskId', width: 120 },
-  { title: '理由', key: 'reason', ellipsis: true },
+  { title: '理由', key: 'reason', width: 120, ellipsis: true },
   { title: '状态', key: 'status', width: 100 },
   { title: '裁定结果', key: 'decision', width: 140 },
-  { title: '裁定说明', key: 'resolutionNote', ellipsis: true },
+  { title: '裁定说明', key: 'resolutionNote', width: 110, ellipsis: true },
   { title: '发起时间', key: 'createdAt', width: 170 },
 ];
 

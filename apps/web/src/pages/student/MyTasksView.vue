@@ -111,7 +111,7 @@ onMounted(() => {
           :pagination="false"
           row-key="id"
           class="click-table"
-          :scroll="{ x: 640 }"
+          :scroll="{ x: 760 }"
           :custom-row="customRow"
         >
           <template #bodyCell="{ column, record }">

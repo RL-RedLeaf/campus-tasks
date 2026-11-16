@@ -14,8 +14,8 @@ function errMsg(e: unknown): string {
 }
 
 const columns: TableColumnsType = [
-  { title: '分类名称', dataIndex: 'name', key: 'name' },
-  { title: '说明', key: 'description' },
+  { title: '分类名称', dataIndex: 'name', key: 'name', width: 160 },
+  { title: '说明', key: 'description', width: 220 },
   { title: '排序', dataIndex: 'sortOrder', key: 'sortOrder', width: 100, align: 'center' },
   { title: '操作', key: 'action', width: 160, fixed: 'right' },
 ];

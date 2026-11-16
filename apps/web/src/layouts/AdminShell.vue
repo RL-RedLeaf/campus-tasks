@@ -62,7 +62,6 @@ const adminGroups: MenuGroup[] = [
       { key: 'admin-users', path: '/admin/users', label: '用户管理', icon: TeamOutlined },
       { key: 'admin-categories', path: '/admin/categories', label: '任务分类', icon: AppstoreOutlined },
       { key: 'admin-tasks', path: '/admin/tasks', label: '任务定价', icon: ProfileOutlined },
-      { key: 'teacher-tasks', path: '/teacher/tasks', label: '任务验收', icon: FileDoneOutlined },
       {
         key: 'admin-announcements',
         path: '/admin/announcements',

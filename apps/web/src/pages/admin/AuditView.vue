@@ -27,10 +27,10 @@ const columns: TableColumnsType = [
   { title: '时间', key: 'createdAt', width: 170 },
   { title: '操作人 ID', key: 'actorId', width: 110, align: 'center' },
   { title: '角色', key: 'actorRole', width: 90 },
-  { title: '动作', key: 'action' },
+  { title: '动作', key: 'action', width: 120 },
   { title: '目标类型', key: 'targetType', width: 140 },
   { title: '目标 ID', key: 'targetId', width: 110, align: 'center' },
-  { title: '原因', key: 'reason', ellipsis: true },
+  { title: '原因', key: 'reason', width: 200, ellipsis: true },
   { title: 'IP', key: 'ip', width: 140 },
 ];
 
@@ -105,7 +105,7 @@ onMounted(() => void load());
       :loading="loading"
       :pagination="false"
       row-key="id"
-      :scroll="{ x: 960 }"
+      :scroll="{ x: 1080 }"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'createdAt'">{{ fmtTime(record.createdAt) }}</template>

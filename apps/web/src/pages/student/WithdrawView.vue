@@ -33,7 +33,7 @@ const columns: TableColumnsType = [
   { title: '预计现金', key: 'cash', width: 120, align: 'right' },
   { title: '状态', key: 'status', width: 100 },
   { title: '申请时间', key: 'appliedAt', width: 170 },
-  { title: '驳回原因', key: 'rejectReason', ellipsis: true },
+  { title: '驳回原因', key: 'rejectReason', width: 160, ellipsis: true },
   { title: '操作', key: 'action', width: 100 },
 ];
 

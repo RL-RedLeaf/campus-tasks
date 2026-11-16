@@ -24,7 +24,7 @@ function fmtTime(value: string): string {
 const router = useRouter();
 
 const columns: TableColumnsType = [
-  { title: '标题', key: 'title' },
+  { title: '标题', key: 'title', width: 220 },
   { title: '教师', key: 'teacher', width: 100 },
   { title: '分类', key: 'category', width: 100 },
   { title: '状态', key: 'status', width: 90 },
@@ -275,7 +275,7 @@ async function openPreview(row: TaskSummary): Promise<void> {
       :loading="loading"
       :pagination="false"
       row-key="id"
-      :scroll="{ x: 1050 }"
+      :scroll="{ x: 1270 }"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'title'">

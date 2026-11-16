@@ -105,3 +105,12 @@ body {
     corner-shape: superellipse(1.84);
   }
 }
+
+/*
+ * 表格操作列间距：各页面的 .op-link（scoped）会清零 antd 按钮内边距，
+ * 相邻操作链接会完全贴在一起（用户管理页「编辑/禁用/重置密码」三连最明显）。
+ * 全局兜底：相邻操作链接保持 12px 间距。
+ */
+.ant-table .op-link + .op-link {
+  margin-left: 12px;
+}
