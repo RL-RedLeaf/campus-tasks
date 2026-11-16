@@ -113,7 +113,7 @@ async function loadReconcile(): Promise<void> {
 
 const jobs = [
   { key: 'close', label: '关闭到期任务', desc: '将已过截止时间且仍有空位的任务关闭' },
-  { key: 'settle', label: '结算到期任务', desc: '对已截止且全部验收的任务执行结算发放' },
+  { key: 'settle', label: '结算到期任务', desc: '对已截止且验收完成的任务结算发放' },
   { key: 'reminders', label: '发送提醒', desc: '任务截止提醒与教师验收超时提醒' },
   { key: 'cleanup', label: '清理通知', desc: '清理已读的历史站内通知' },
 ];
@@ -357,17 +357,27 @@ onMounted(() => {
 .job-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--sasu-border);
 }
 .job-row:last-child {
   border-bottom: none;
 }
+/* 描述占满剩余宽度；按钮固定尺寸不被压缩，避免文字被挤成碎行 */
+.job-info {
+  flex: 1;
+  min-width: 0;
+}
+.job-row :deep(.ant-btn) {
+  flex-shrink: 0;
+}
 .job-info b {
   font-size: 13px;
 }
 .job-info .tip {
   margin-top: 2px;
+  /* 防止换行时末行孤字悬挂（如「…发放」只剩一个「放」字） */
+  text-wrap: pretty;
 }
 </style>
