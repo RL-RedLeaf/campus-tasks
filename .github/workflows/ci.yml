@@ -67,6 +67,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # seed.ts 相对引用 src/generated/prisma/client，必须先生成客户端
+      - name: Generate Prisma client
+        run: pnpm --filter @sasu/api prisma:generate
+
       - name: Migrate deploy（空库跑到最新）
         run: pnpm --filter @sasu/api db:migrate
 
