@@ -33,7 +33,7 @@ body{margin:0;background:var(--sasu-bg-page);color:var(--sasu-text);
   font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
 a{color:var(--sasu-brand);text-decoration:none}
 .num{font-variant-numeric:tabular-nums}
-.muted-small{font-size:12.5px;color:var(--sasu-text-secondary)}
+.muted-small{font-size:12.5px;color:#8a94a0}
 [v-cloak]{display:none}
 .brand-badge{display:inline-grid;place-items:center;border-radius:11px;background:var(--sasu-brand);
   box-shadow:0 3px 10px rgba(180,35,42,.35);flex:0 0 auto;overflow:hidden}
@@ -99,9 +99,13 @@ a{color:var(--sasu-brand);text-decoration:none}
   transition:box-shadow .15s}
 .tcard:hover{box-shadow:0 6px 24px rgba(16,24,40,.12)}
 .tcard h3{margin:0;font-size:15px;line-height:1.5}
-.tcard .desc{color:var(--sasu-text-secondary);font-size:13px;display:-webkit-box;-webkit-line-clamp:3;
-  -webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
-.tcard .meta{display:flex;gap:12px;font-size:12.5px;color:var(--sasu-text-secondary);flex-wrap:wrap}
+.tcard .desc{color:var(--sasu-text-secondary);font-size:13px;white-space:pre-line;
+  word-break:break-word;margin-bottom:2px}
+/* 字段结构化：标签灰小字 + 值深色（需求卡片字段区分） */
+.f-rows{display:flex;flex-direction:column;gap:4px;background:#f8fafc;border-radius:8px;padding:9px 11px}
+.f-row{display:flex;gap:8px;font-size:12.5px;line-height:1.5}
+.f-label{color:#9aa3ad;flex:0 0 auto;font-weight:600}
+.f-value{color:var(--sasu-text);word-break:break-all}
 .tcard .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--sasu-line);
   padding-top:9px;margin-top:auto;gap:8px;flex-wrap:wrap}
 .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
@@ -225,11 +229,11 @@ footer{padding:16px 24px 26px;text-align:center;color:#8a94a0;font-size:12.5px}
                   </div>
                   <h3>{{ t.department_name || '未命名需求' }}</h3>
                   <div class="desc">{{ t.requirement || '（无内容）' }}</div>
-                  <div class="meta">
-                    <span>填写人 {{ t.submitter_name || '—' }}</span>
-                    <span v-if="t.contact">{{ t.contact }}</span>
+                  <div class="f-rows">
+                    <div class="f-row"><span class="f-label">填写人</span><span class="f-value">{{ t.submitter_name || '—' }}</span></div>
+                    <div class="f-row" v-if="t.contact"><span class="f-label">联系方式</span><span class="f-value">{{ t.contact }}</span></div>
+                    <div class="f-row" v-if="t.claimant"><span class="f-label">认领人</span><span class="f-value" style="color:#c77700">{{ t.claimant }}</span></div>
                   </div>
-                  <div class="meta" v-if="t.claimant"><span style="color:#c77700">认领人 {{ t.claimant }}</span></div>
                   <div class="foot">
                     <span class="muted-small">更新于 {{ t.status_at || fmtTs(t.created_ts) }}</span>
                     <span class="muted-small">{{ t.status_count }} 次变更</span>
@@ -819,7 +823,7 @@ var app = Vue.createApp({
 
     return { me: me, myName: myName, confirmName: confirmName, switchRole: switchRole,
       antdTheme: antdTheme, zhLocale: zhLocale,
-      connColor: computed(function(){ return conn.kind === 'ok' ? 'success' : conn.kind === 'err' ? 'error' : 'processing'; }),
+      connColor: computed(function(){ return conn.kind === 'ok' ? 'default' : conn.kind === 'err' ? 'error' : 'processing'; }),
       connText: computed(function(){ return conn.text; }),
       activeView: activeView, switchView: switchView, pageMeta: pageMeta,
       deptTypes: DEPT_TYPES, deptEmoji: deptEmoji, statusOrder: STATUS_ORDER,
