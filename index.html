@@ -5,192 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>校园任务平台 | 上科大附校</title>
 <meta name="color-scheme" content="light">
-<style>
-:root{
-  --ink:#1f2329; --muted:#5c6670; --faint:#8a94a0; --line:#e8ecf1;
-  --bg:#f7f8fa; --white:#fff;
-  --brand:#b4232a; --brand-hover:#8f1b21; --brand-light:#fbeeef;
-  --blue:#1f4e79; --blue-bg:#edf3f9;
-  --green:#2e7d5b; --green-bg:#e9f4ef;
-  --amber:#c77700; --amber-bg:#fdf3e3;
-  --red:#c0392b; --red-bg:#fdeceb;
-  --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.14);
-  --radius:12px;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
-  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
-a{color:var(--brand);text-decoration:none}
-button,input,textarea,select{font:inherit}
-.container{width:min(1180px,calc(100% - 32px));margin:0 auto}
-.muted{color:var(--muted)}
-.num{font-variant-numeric:tabular-nums}
-
-/* ---------- 顶栏 ---------- */
-.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
-  height:58px;padding:0 20px;background:rgba(255,255,255,.94);
-  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
-.brand .mark{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:14px;
-  background:var(--brand);box-shadow:0 3px 10px rgba(180,35,42,.3)}
-.brand small{font-weight:600;color:var(--muted);font-size:12px;border-left:1px solid var(--line);padding-left:10px}
-.spacer{flex:1}
-.conn{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);white-space:nowrap}
-.conn .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:0 0 auto}
-.conn.ok .dot{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
-.conn.err .dot{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15)}
-.conn.load .dot{background:#f59e0b;animation:pulse 1.2s infinite}
-@keyframes pulse{50%{opacity:.35}}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;
-  border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600;transition:all .15s}
-.btn-primary{background:var(--brand);color:#fff}
-.btn-primary:hover{background:var(--brand-hover)}
-.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
-.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
-.btn-sm{padding:5px 11px;font-size:13px;border-radius:8px}
-.btn[disabled]{opacity:.55;cursor:not-allowed}
-.whoami{display:inline-flex;align-items:center;gap:8px;background:var(--brand-light);border-radius:999px;
-  padding:5px 12px 5px 6px;font-size:13px}
-.whoami .avatar{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;
-  place-items:center;font-size:12px;font-weight:700}
-.whoami b{font-weight:700}
-.whoami .rl{color:var(--brand);font-weight:600}
-.whoami button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}
-.whoami button:hover{color:var(--brand)}
-
-/* ---------- Tabs ---------- */
-.tabs{display:flex;gap:4px;margin:18px 0 0;border-bottom:2px solid var(--line);overflow-x:auto}
-.tab{border:0;background:none;padding:10px 16px;font-weight:600;color:var(--muted);cursor:pointer;
-  border-radius:9px 9px 0 0;font-size:14px;white-space:nowrap;position:relative}
-.tab:hover{color:var(--ink)}
-.tab.on{color:var(--brand);background:var(--brand-light)}
-.tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--brand)}
-.tab .bdg{display:inline-block;min-width:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:#fff;
-  font-size:11px;line-height:18px;text-align:center;margin-left:4px;font-weight:700}
-
-/* ---------- Hero ---------- */
-.hero{margin-top:18px;background:linear-gradient(135deg,#b4232a,#d96c5f);border-radius:16px;color:#fff;
-  padding:22px 26px;box-shadow:0 10px 30px -12px rgba(180,35,42,.5)}
-.hero h1{margin:0;font-size:21px;letter-spacing:.02em}
-.hero p{margin:6px 0 0;opacity:.92;font-size:13.5px}
-.hero-stats{display:flex;gap:26px;margin-top:14px;flex-wrap:wrap}
-.hstat{min-width:88px}
-.hstat b{display:block;font-size:22px;font-weight:800}
-.hstat span{font-size:12px;opacity:.85}
-
-/* ---------- 卡片与网格 ---------- */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:14px}
-.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
-  padding:16px 18px}
-.tcard{display:flex;flex-direction:column;gap:9px;transition:box-shadow .15s}
-.tcard:hover{box-shadow:0 4px 18px -6px rgba(16,24,40,.18)}
-.tcard .t-top{display:flex;align-items:center;gap:8px}
-.cat-tag{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--blue-bg);color:var(--blue);font-weight:600}
-.tcard h3{margin:0;font-size:15.5px;line-height:1.45}
-.tcard .desc{color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tcard .meta{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
-.tcard .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--line);
-  padding-top:9px;margin-top:2px}
-.reward{font-size:19px;font-weight:800;color:var(--brand)}
-.reward small{font-size:12px;font-weight:600;color:var(--muted)}
-.progress{height:7px;border-radius:999px;background:var(--line);overflow:hidden;flex:1}
-.progress i{display:block;height:100%;background:var(--brand);border-radius:999px}
-.prow{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
-
-/* ---------- 状态徽章 ---------- */
-.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:3px 10px;
-  border-radius:999px;border:1px solid}
-.st-pricing{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb}
-.st-open{background:var(--green-bg);color:var(--green);border-color:#bfe0cf}
-.st-full{background:var(--amber-bg);color:var(--amber);border-color:#f3d9a4}
-.st-review{background:var(--blue-bg);color:var(--blue);border-color:#c5d7ea}
-.st-completed{background:var(--green-bg);color:var(--green);border-color:#bfe0cf}
-.st-cancelled{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;text-decoration:line-through}
-.st-dead{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb}
-.st-person{background:var(--blue-bg);color:var(--blue);border-color:#c5d7ea}
-.st-claimed{background:var(--amber-bg);color:var(--amber);border-color:#f3d9a4}
-.st-submitted{background:var(--blue-bg);color:var(--blue);border-color:#c5d7ea}
-.st-accepted{background:var(--green-bg);color:var(--green);border-color:#bfe0cf}
-.st-rejected{background:var(--red-bg);color:var(--red);border-color:#f2c4c0}
-
-/* ---------- 筛选条 ---------- */
-.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;
-  background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px}
-.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font-size:13px;
-  cursor:pointer;font-weight:600;color:var(--muted)}
-.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
-.chip:hover{border-color:var(--brand)}
-.search{flex:1;min-width:160px;border:1px solid var(--line);border-radius:9px;padding:7px 12px;outline:none}
-.search:focus{border-color:var(--brand)}
-
-/* ---------- 面板/明细 ---------- */
-.panel{margin-top:16px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
-  box-shadow:var(--shadow);overflow:hidden}
-.panel-h{padding:13px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:14.5px;
-  display:flex;align-items:center;justify-content:space-between;gap:10px}
-.panel-b{padding:14px 18px}
-.task-line{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
-.task-line:last-child{margin-bottom:0}
-.task-line .tl{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.task-line h4{margin:0 0 4px;font-size:14.5px}
-.task-line .m{font-size:12.5px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
-.claims{margin-top:9px;border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:7px}
-.claim-row{display:flex;align-items:center;gap:9px;font-size:13px;flex-wrap:wrap}
-.claim-row .who{font-weight:700;min-width:70px}
-.tline{list-style:none;margin:8px 0 0;padding:0 0 0 4px;border-left:2px solid var(--line)}
-.tline li{position:relative;padding:0 0 8px 14px;font-size:12.5px;color:var(--muted)}
-.tline li::before{content:'';position:absolute;left:-5px;top:5px;width:8px;height:8px;border-radius:50%;
-  background:var(--faint)}
-.tline li b{color:var(--ink)}
-
-/* ---------- 表单 ---------- */
-.form-card{max-width:640px;margin:16px auto 0}
-.field{margin-bottom:13px}
-.label{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;margin-bottom:6px}
-.label .req{color:var(--brand)}
-.label .hint{font-weight:400;color:var(--faint);font-size:12px}
-.input,.textarea,.select{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none;
-  background:#fff;transition:border-color .15s}
-.input:focus,.textarea:focus,.select:focus{border-color:var(--brand)}
-.textarea{resize:vertical;min-height:88px}
-.err{display:none;color:var(--red);font-size:12.5px;margin-top:4px}
-.err.show{display:block}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chips{display:flex;gap:7px;flex-wrap:wrap}
-
-/* ---------- 提示 ---------- */
-.notice{display:none;border-radius:10px;padding:11px 14px;font-size:13.5px;margin:12px 0}
-.notice.show{display:block}
-.notice.info{background:var(--blue-bg);color:var(--blue)}
-.notice.ok{background:var(--green-bg);color:var(--green)}
-.notice.err{background:var(--red-bg);color:var(--red)}
-.empty{padding:34px 16px;text-align:center;color:var(--faint)}
-.empty .big{font-size:34px;margin-bottom:6px}
-
-/* ---------- 身份弹层 ---------- */
-.mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:grid;place-items:center;backdrop-filter:blur(3px)}
-/* 关键：显式 display:grid 会盖掉 [hidden] 的 UA 样式，必须显式关（否则遮罩永久拦截全页点击） */
-.mask[hidden]{display:none}
-.role-box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:26px;width:min(420px,calc(100% - 40px))}
-.role-box h3{margin:0 0 4px;font-size:17px}
-.role-box p{margin:0 0 14px;color:var(--muted);font-size:13px}
-.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
-.role-card{border:2px solid var(--line);border-radius:11px;padding:13px 8px;text-align:center;cursor:pointer;transition:all .15s}
-.role-card .em{font-size:22px}
-.role-card b{display:block;font-size:13.5px;margin-top:4px}
-.role-card:hover{border-color:var(--brand)}
-.role-card.on{border-color:var(--brand);background:var(--brand-light)}
-.role-card .d{font-size:11px;color:var(--faint)}
-footer{margin:26px 0 30px;text-align:center;color:var(--faint);font-size:12.5px}
-
-@media(max-width:640px){
-  .row2{grid-template-columns:1fr}
-  .hero-stats{gap:14px}
-  .whoami .rl{display:none}
-}
-</style>
+<!-- ===== CDN（npmmirror 阿里镜像，国内直连；与主站同款 ant-design-vue 4） ===== -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/ant-design-vue/4.2.6/files/dist/reset.css">
 <link rel="stylesheet" href="https://registry.npmmirror.com/ant-design-vue/4.2.6/files/dist/antd.min.css">
 <script src="https://registry.npmmirror.com/dayjs/1.11.13/files/dayjs.min.js"></script>
@@ -202,247 +17,457 @@ footer{margin:26px 0 30px;text-align:center;color:var(--faint);font-size:12.5px}
 <script src="https://registry.npmmirror.com/dayjs/1.11.13/files/plugin/weekYear.js"></script>
 <script src="https://registry.npmmirror.com/dayjs/1.11.13/files/plugin/advancedFormat.js"></script>
 <script src="https://registry.npmmirror.com/dayjs/1.11.13/files/plugin/quarterOfYear.js"></script>
-<script src="https://registry.npmmirror.com/vue/3.5.13/files/dist/vue.global.prod.js"></script>
+<script src="https://registry.npmmirror.com/vue/3.5.13/files/dist/vue.global.js"></script>
 <script src="https://registry.npmmirror.com/ant-design-vue/4.2.6/files/dist/antd.min.js"></script>
-<style>[v-cloak]{display:none}.muted-small{font-size:12.5px;color:#5c6670}.ant-tabs{margin-top:8px}.ant-card{border-radius:12px}</style>
+<style>
+:root{
+  --sasu-brand:#b4232a; --sasu-brand-hover:#8f1b21; --sasu-brand-light:#fbeeef;
+  --sasu-text:#1f2329; --sasu-text-secondary:#5c6670; --sasu-line:#e8ecf1;
+  --sasu-border:#d5d9e0; --sasu-bg-page:#f7f8fa; --sasu-bg-card:#ffffff;
+  --sasu-radius-card:14px; --dark:#0f172a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sasu-bg-page);color:var(--sasu-text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--sasu-brand);text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+.muted-small{font-size:12.5px;color:var(--sasu-text-secondary)}
+[v-cloak]{display:none}
+.brand-badge{display:inline-grid;place-items:center;border-radius:11px;background:var(--sasu-brand);
+  box-shadow:0 3px 10px rgba(180,35,42,.35);flex:0 0 auto}
+.brand-badge svg{display:block}
+
+/* ---------- 身份页（主站 LoginView 同款布局） ---------- */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--sasu-bg-page)}
+.login-panel{display:flex;flex-direction:column;align-items:center;gap:20px;width:min(430px,100%)}
+.login-brand{display:flex;align-items:center;gap:12px}
+.brand-name{font-size:18px;font-weight:700;letter-spacing:.2px}
+.login-card{border-radius:var(--sasu-radius-card);box-shadow:0 2px 12px rgba(16,24,40,.06)}
+.login-title{margin:0 0 4px;font-size:18px}
+.tip{margin:0 0 14px;color:var(--sasu-text-secondary);font-size:13px}
+.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:4px}
+.role-card{border:1.5px solid var(--sasu-border);border-radius:10px;padding:11px 6px;text-align:center;cursor:pointer;
+  transition:all .15s;background:#fff}
+.role-card:hover{border-color:var(--sasu-brand)}
+.role-card.on{border-color:var(--sasu-brand);background:var(--sasu-brand-light)}
+.role-card .em{font-size:19px}
+.role-card b{display:block;font-size:13px;margin-top:2px}
+.role-card .d{font-size:11px;color:#9aa3ad}
+
+/* ---------- 壳（主站 AdminShell 同款：浅色 sider + header + content） ---------- */
+.ant-layout{min-height:100vh;background:var(--sasu-bg-page)}
+.sider{background:#fff !important;border-right:1px solid var(--sasu-line)}
+.sider-brand{display:flex;align-items:center;gap:11px;height:60px;padding:0 16px;border-bottom:1px solid var(--sasu-line);
+  color:var(--sasu-text);font-weight:800;font-size:14.5px}
+.sider .ant-menu{border-inline-end:none !important;background:#fff}
+.menu-group-title{font-size:11px;color:#9aa3ad;font-weight:600;letter-spacing:.06em;
+  padding:14px 16px 6px;color:#9aa3ad}
+.topbar{height:60px;background:var(--sasu-bg-card);display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;border-bottom:1px solid var(--sasu-line);line-height:normal;
+  position:sticky;top:0;z-index:50}
+/* antd 的 CSS-in-JS 运行时注入会盖掉单类选择器，需要更高特异性 */
+.ant-layout-header.topbar{background:var(--sasu-bg-card);color:var(--sasu-text)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar .who{display:flex;align-items:center;gap:9px;font-size:13px}
+.topbar .who .avatar{width:28px;height:28px;border-radius:50%;background:var(--sasu-brand);color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+.topbar .who .rl{font-size:12px;color:var(--sasu-text-secondary)}
+.content{padding:20px 24px 36px}
+.content-inner{max-width:1180px;margin:0 auto}
+
+/* ---------- PageHeader（主站组件同款） ---------- */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.page-title{font-size:20px;font-weight:600;margin:0 0 2px;letter-spacing:.2px}
+.page-subtitle{margin:0;color:var(--sasu-text-secondary);font-size:13px}
+.page-header-extra{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* ---------- 点式状态徽章（主站 StatusTag 同款） ---------- */
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--sasu-text-secondary)}
+.status .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:#b9c0c9}
+.status.brand{color:var(--sasu-brand)} .status.brand .dot{background:var(--sasu-brand)}
+.status.success{color:#2e7d5b} .status.success .dot{background:#2e7d5b}
+.status.warning{color:#c77700} .status.warning .dot{background:#c77700}
+.status.danger{color:#c0392b} .status.danger .dot{background:#c0392b}
+.status.muted{color:#6b7280}
+.cat-tag{font-size:12px;padding:1px 9px;border-radius:999px;background:#edf3f9;color:#1f4e79;font-weight:600;
+  white-space:nowrap}
+
+/* ---------- 任务卡片（大厅，主站 TaskHallView 风格） ---------- */
+.tcard{background:var(--sasu-bg-card);border:1px solid var(--sasu-line);border-radius:12px;padding:15px 17px;
+  box-shadow:0 2px 8px rgba(16,24,40,.06);height:100%;display:flex;flex-direction:column;gap:8px;
+  transition:box-shadow .15s}
+.tcard:hover{box-shadow:0 6px 24px rgba(16,24,40,.12)}
+.tcard h3{margin:0;font-size:15px;line-height:1.45}
+.tcard .desc{color:var(--sasu-text-secondary);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden}
+.tcard .meta{display:flex;gap:12px;font-size:12.5px;color:var(--sasu-text-secondary);flex-wrap:wrap}
+.tcard .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--sasu-line);
+  padding-top:9px;margin-top:auto}
+.reward{font-size:18px;font-weight:800;color:var(--sasu-brand)}
+.reward small{font-size:12px;font-weight:600;color:var(--sasu-text-secondary)}
+.prow{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sasu-text-secondary);flex:1}
+.progress{max-width:110px;flex:1}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+
+/* ---------- 任务行 ---------- */
+.task-line{border:1px solid var(--sasu-line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+.task-line:last-child{margin-bottom:0}
+.task-line h4{margin:0 0 4px;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.task-line .m{font-size:12.5px;color:var(--sasu-text-secondary);display:flex;gap:12px;flex-wrap:wrap}
+.claims{margin-top:9px;border-top:1px dashed var(--sasu-line);padding-top:9px;display:flex;flex-direction:column;gap:7px}
+.claim-row{display:flex;align-items:center;gap:9px;font-size:13px;flex-wrap:wrap}
+.claim-row .who{font-weight:700;min-width:70px}
+.tline{list-style:none;margin:8px 0 0;padding:0 0 0 4px;border-left:2px solid var(--sasu-line)}
+.tline li{position:relative;padding:0 0 8px 14px;font-size:12.5px;color:var(--sasu-text-secondary)}
+.tline li::before{content:'';position:absolute;left:-5px;top:5px;width:8px;height:8px;border-radius:50%;background:#b9c0c9}
+.tline li b{color:var(--sasu-text)}
+/* 表格内嵌详情去掉边框线 */
+.ant-table-expanded-row .claims{border-top:none;padding-top:2px}
+footer{padding:16px 24px 26px;text-align:center;color:#8a94a0;font-size:12.5px}
+</style>
 </head>
 <body>
 <div id="app" v-cloak>
   <a-config-provider :theme="antdTheme" :locale="zhLocale">
-  <header class="topbar">
-    <div class="brand"><span class="mark">任</span>校园任务平台<small>上科大附校</small></div>
-    <div style="flex:1"></div>
-    <a-tag :color="connColor" style="border-radius:999px">{{ connText }}</a-tag>
-    <a-button size="small" @click="refresh(true)">↻ 刷新</a-button>
-    <a-tag v-if="me" style="border-radius:999px;padding:3px 10px">👤 {{ me.name }} · {{ roleLabel }}</a-tag>
-    <a-button v-if="me" size="small" type="text" @click="showRoleMask(true)">切换身份</a-button>
-  </header>
 
-  <div class="page-wrap">
-    <section class="hero">
-      <h1>校园任务平台</h1>
-      <p>教师发布任务 → 管理员定价上架 → 学生认领并提交 → 验收通过即获得积分。全程留痕，数据可导出。</p>
-      <div class="hero-stats">
-        <div><b>{{ hero.tasks }}</b><span>任务总数</span></div>
-        <div><b>{{ hero.open }}</b><span>招募中</span></div>
-        <div><b>{{ hero.done }}</b><span>已完成</span></div>
-        <div><b>{{ hero.points }}</b><span>累计发放积分</span></div>
+  <!-- ====== 身份选择（未进入时，主站 LoginView 同款布局） ====== -->
+  <div v-if="!me" class="login-page">
+    <div class="login-panel">
+      <div class="login-brand">
+        <span class="brand-badge"><svg width="44" height="44" viewBox="0 0 48 48">
+          <rect width="48" height="48" rx="12" fill="#b4232a"/>
+          <circle cx="24" cy="24" r="13" fill="none" stroke="#fff" stroke-width="2.5"/>
+          <circle cx="24" cy="24" r="5.5" fill="none" stroke="#fff" stroke-width="2"/>
+          <path d="M24 11v6M24 31v6M11 24h6M31 24h6" stroke="#fff" stroke-width="2"/>
+        </svg></span>
+        <span class="brand-name">校园任务平台</span>
       </div>
-    </section>
-
-    <a-tabs v-model:activeKey="activeTab" style="margin-top:8px">
-      <!-- 任务大厅 -->
-      <a-tab-pane key="hall" tab="任务大厅">
-        <div class="filters">
-          <a-radio-group v-model:value="hallCat" button-style="solid" size="small">
-            <a-radio-button v-for="c in cats" :key="c" :value="c">{{ c }}</a-radio-button>
-          </a-radio-group>
-          <a-input v-model:value="hallKw" placeholder="🔍 搜索任务标题 / 描述…" style="max-width:220px" allow-clear>
-          </a-input>
-        </div>
-        <a-row :gutter="[14,14]" style="margin-top:14px">
-          <a-col v-for="t in hallList" :key="t.id" :xs="24" :sm="12" :lg="8">
-            <div class="tcard">
-              <div style="display:flex;align-items:center;gap:8px">
-                <status-badge :status="t.status" :dead="t.dead"></status-badge>
-                <span class="cat-tag">{{ t.info.category || '其他' }}</span>
-                <span class="num" style="margin-left:auto;font-size:11.5px;color:#8a94a0">{{ t.id }}</span>
-              </div>
-              <h3>{{ t.title }}</h3>
-              <div class="desc">{{ t.info.description }}</div>
-              <div class="meta"><span>👤 {{ t.creator }}</span><span>⏰ 截止 {{ fmtTs(t.info.deadline_ts) }}</span></div>
-              <div class="foot">
-                <div class="reward">{{ t.info.reward }}<small> 积分/人</small></div>
-                <div class="prow">
-                  <a-progress :percent="pct(t)" :show-info="false" size="small" class="progress"></a-progress>
-                  <span class="num">{{ t.claimedCount }}/{{ headOf(t) }} 人</span>
-                  <a-button v-if="canClaim(t)" type="primary" size="small" @click="doClaim(t)">认领</a-button>
-                  <a-tag v-if="joined(t)" :bordered="false" :color="claimColor(joined(t).status)">{{ claimLabel(joined(t).status) }}</a-tag>
-                </div>
+      <a-card class="login-card">
+        <h2 class="login-title">选择身份进入</h2>
+        <p class="tip">选择你的角色并填写姓名（将作为所有操作的署名）。数据由 QuickForm 云端保存，每次操作均记录署名。</p>
+        <a-form layout="vertical">
+          <a-form-item label="角色" required>
+            <div class="role-cards">
+              <div v-for="r in roleCards" :key="r.role" class="role-card" :class="{on: meRoleDraft === r.role}"
+                @click="meRoleDraft = r.role">
+                <div class="em">{{ r.emoji }}</div>
+                <b>{{ r.label }}</b>
+                <div class="d">{{ r.desc }}</div>
               </div>
             </div>
-          </a-col>
-        </a-row>
-        <a-empty v-if="hallList.length === 0" description="该筛选条件下暂无任务" style="padding:40px 0"></a-empty>
-      </a-tab-pane>
+          </a-form-item>
+          <a-form-item label="你的姓名" name="name" :rules="[{ required: true, message: '请填写姓名' }]">
+            <a-input v-model:value="roleNameDraft" :maxlength="20" placeholder="真实姓名，如：张小明"
+              size="large" @pressEnter="confirmRole"/>
+          </a-form-item>
+          <a-button type="primary" block size="large" @click="confirmRole">进入平台</a-button>
+        </a-form>
+      </a-card>
+    </div>
+  </div>
 
-      <!-- 我的面板 -->
-      <a-tab-pane key="mine" tab="我的面板">
-        <template v-if="me">
-          <!-- 学生 -->
-          <template v-if="me.role === 'STUDENT'">
-            <a-card :bordered="false" style="border-radius:12px">
-              <template #title>🎒 {{ me.name }}，你已认领 {{ myTasks.length }} 个任务</template>
-              <template #extra><span class="reward" style="font-size:16px">累计获得 {{ myPoints }} 积分</span></template>
-              <a-empty v-if="myTasks.length === 0" description="还没有认领任务，去任务大厅看看吧">
-                <a-button type="primary" @click="activeTab = 'hall'">逛逛任务大厅</a-button>
-              </a-empty>
-              <div v-for="t in myTasks" :key="t.id" style="border:1px solid var(--sasu-line);border-radius:10px;padding:12px 14px;margin-bottom:10px">
-                <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-                  <div>
-                    <h4 style="margin:0 0 4px"><status-badge :status="t.status" :dead="t.dead"></status-badge> {{ t.title }}</h4>
-                    <div class="meta" style="display:flex;gap:12px;font-size:12.5px;color:#5c6670">
-                      <span>👤 {{ t.creator }}</span><span>💰 {{ t.info.reward }} 积分/人</span>
-                      <span>⏰ 截止 {{ fmtTs(t.info.deadline_ts) }}</span>
-                    </div>
-                  </div>
-                  <status-badge :status="claimEventOf(t)" tone-label="1"></status-badge>
-                </div>
-                <div style="margin-top:9px;border-top:1px dashed var(--sasu-line);padding-top:9px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-                  <a-tag :bordered="false" :color="claimColor(myClaim(t).status)">{{ claimLabel(myClaim(t).status) }}</a-tag>
-                  <a-button v-if="myClaim(t).status === 'claimed'" type="primary" size="small" @click="openSubmit(t)">提交成果</a-button>
-                  <span v-if="myClaim(t).status === 'claimed'" class="muted-small">提交后教师将进行验收</span>
-                  <span v-if="myClaim(t).status === 'submitted'" class="muted-small">已提交，等待教师验收…</span>
-                  <span v-if="myClaim(t).status === 'accepted'" style="color:#2e7d5b;font-weight:700">🎉 验收通过，+{{ t.info.reward }} 积分</span>
-                  <template v-if="myClaim(t).status === 'rejected'">
-                    <span style="color:#c0392b">被驳回：{{ rejectReason(t.id) }}</span>
-                    <a-button type="primary" size="small" @click="openSubmit(t)">重新提交</a-button>
-                  </template>
-                </div>
-              </div>
-            </a-card>
-          </template>
-          <!-- 教师 -->
-          <template v-else-if="me.role === 'TEACHER'">
-            <a-card :bordered="false" style="border-radius:12px">
-              <template #title>📖 {{ me.name }} 老师发布了 {{ myTasks.length }} 个任务 · 待验收 {{ waitReview }} 项</template>
-              <template #extra><a-button type="primary" size="small" @click="activeTab = 'publish'">＋ 发布新任务</a-button></template>
-              <a-empty v-if="myTasks.length === 0" description="还没有发布过任务"></a-empty>
-              <div v-for="t in myTasks" :key="t.id" style="border:1px solid var(--sasu-line);border-radius:10px;padding:12px 14px;margin-bottom:10px">
-                <div style="display:flex;justify-content:space-between;gap:10px">
-                  <div><h4 style="margin:0 0 4px"><status-badge :status="t.status" :dead="t.dead"></status-badge> {{ t.title }}</h4>
-                    <div class="muted-small">💰 {{ t.info.reward }} 积分/人 · 🧑‍🤝‍🧑 {{ t.claimedCount }}/{{ headOf(t) }} 人 · ⏰ 截止 {{ fmtTs(t.info.deadline_ts) }}</div></div>
-                  <a-button v-if="isOpen(t)" size="small" @click="doCancel(t)">取消任务</a-button>
-                </div>
-                <div v-if="Object.keys(t.claims).length" style="margin-top:9px;border-top:1px dashed var(--sasu-line);padding-top:9px">
-                  <div v-for="(c, who) in t.claims" :key="who" style="display:flex;gap:9px;align-items:center;margin-bottom:7px;flex-wrap:wrap">
-                    <b style="min-width:70px">{{ who }}</b>
-                    <a-tag :bordered="false" :color="claimColor(c.status)">{{ claimLabel(c.status) }}</a-tag>
-                    <span class="muted-small num">{{ fmtShort(c.ts) }}</span>
-                    <template v-if="c.status === 'submitted'">
-                      <a-button type="primary" size="small" @click="doAccept(t, who)">验收通过</a-button>
-                      <a-button size="small" @click="openReject(t, who)">驳回</a-button>
-                    </template>
-                    <span v-if="c.status === 'accepted'" style="color:#2e7d5b">已发放 {{ t.info.reward }} 积分</span>
-                  </div>
-                </div>
-              </div>
-            </a-card>
-          </template>
-          <!-- 管理员 -->
-          <template v-else>
-            <a-card :bordered="false" style="border-radius:12px">
-              <template #title>🛡️ 管理员视图 · 待定价 {{ pricingTasks.length }} 个</template>
-              <a-empty v-if="pricingTasks.length === 0" description="没有待定价的任务"></a-empty>
-              <div v-for="t in pricingTasks" :key="t.id" style="border:1px solid var(--sasu-line);border-radius:10px;padding:12px 14px;margin-bottom:10px">
-                <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-                  <div>
-                    <h4 style="margin:0 0 4px">{{ t.title }} <span class="cat-tag">{{ t.info.category || '其他' }}</span></h4>
-                    <div class="muted-small">👤 {{ t.creator }} · 📝 建议积分 {{ t.info.reward }}/人 · 🧑‍🤝‍🧑 {{ headOf(t) }} 人</div>
-                    <div style="margin-top:6px;color:#5c6670;font-size:13px">{{ t.info.description }}</div>
-                  </div>
-                  <a-button type="primary" size="small" @click="doPrice(t)">定价上架</a-button>
-                </div>
-              </div>
-            </a-card>
-          </template>
-        </template>
-        <a-empty v-else description="请先选择身份"></a-empty>
-      </a-tab-pane>
+  <!-- ====== 主壳（主站 AdminShell 同款布局） ====== -->
+  <a-layout v-else>
+    <a-layout-sider theme="light" :width="224" class="sider" breakpoint="lg" collapsed-width="0">
+      <div class="sider-brand">
+        <span class="brand-badge"><svg width="34" height="34" viewBox="0 0 48 48">
+          <rect width="48" height="48" rx="12" fill="#b4232a"/>
+          <circle cx="24" cy="24" r="13" fill="none" stroke="#fff" stroke-width="2.5"/>
+          <circle cx="24" cy="24" r="5.5" fill="none" stroke="#fff" stroke-width="2"/>
+          <path d="M24 11v6M24 31v6M11 24h6M31 24h6" stroke="#fff" stroke-width="2"/>
+        </svg></span>
+        校园任务平台
+      </div>
+      <div class="menu-group-title">任务</div>
+      <a-menu mode="inline" :selected-keys="[activeView]" style="border:none;background:#fff">
+        <a-menu-item v-for="item in menuItems" :key="item.key" @click="switchView(item.key)">
+          <span style="display:inline-flex;align-items:center;gap:9px" v-html="item.icon + '<span>' + item.label + '</span>'"></span>
+          <a-tag v-if="item.badge" :bordered="false" color="error" style="margin-left:6px;border-radius:999px;
+            font-size:11px;line-height:16px;padding:0 6px">{{ item.badge }}</a-tag>
+        </a-menu-item>
+      </a-menu>
+      <div class="menu-group-title">数据</div>
+      <a-menu mode="inline" :selected-keys="[activeView]" style="border:none;background:#fff">
+        <a-menu-item key="stats" @click="switchView('stats')">
+          <span style="display:inline-flex;align-items:center;gap:9px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 14V8M6 14V3M10 14v-5M14 14V6"/></svg>
+            <span>数据统计</span>
+          </span>
+        </a-menu-item>
+      </a-menu>
+    </a-layout-sider>
+    <a-layout>
+      <a-layout-header class="topbar">
+        <div class="topbar-right" style="margin-left:auto">
+          <a-tag :color="connColor" style="border-radius:999px">{{ connText }}</a-tag>
+          <a-button size="small" @click="refresh(true)">↻ 刷新</a-button>
+          <div class="who">
+            <span class="avatar">{{ me.name.slice(0, 1) }}</span>
+            <span>{{ me.name }}</span>
+            <span class="rl">{{ roleLabel }}</span>
+            <a-button size="small" @click="switchRole">切换</a-button>
+          </div>
+        </div>
+      </a-layout-header>
+      <a-layout-content class="content">
+        <div class="content-inner">
+          <div class="page-header">
+            <div class="page-header-main">
+              <h2 class="page-title">{{ pageMeta.title }}</h2>
+              <p v-if="pageMeta.subtitle" class="page-subtitle">{{ pageMeta.subtitle }}</p>
+            </div>
+            <div class="page-header-extra">
+              <a-button v-if="activeView !== 'publish' && (me.role === 'TEACHER' || me.role === 'ADMIN')"
+                type="primary" @click="switchView('publish')">＋ 发布任务</a-button>
+            </div>
+          </div>
 
-      <!-- 发布任务 -->
-      <a-tab-pane key="publish" tab="发布任务">
-        <a-card :bordered="false" style="border-radius:12px;max-width:640px;margin:0 auto" v-if="me && (me.role === 'TEACHER' || me.role === 'ADMIN')">
-          <template #title>发布任务</template>
-          <a-alert v-if="pubNotice.text" :type="pubNotice.type" :message="pubNotice.text" show-icon style="margin-bottom:12px" closable @close="pubNotice.text = ''"></a-alert>
-          <a-form layout="vertical">
-            <a-form-item label="任务标题" required>
-              <a-input v-model:value="pub.title" :maxlength="40" placeholder="如：图书馆新书上架搬运"></a-input>
-            </a-form-item>
-            <a-form-item label="分类" required>
-              <a-radio-group v-model:value="pub.category" button-style="solid" size="small">
+          <!-- 任务大厅 -->
+          <template v-if="activeView === 'hall'">
+            <div class="filters">
+              <a-radio-group v-model:value="hallCat" button-style="solid" size="small">
                 <a-radio-button v-for="c in cats" :key="c" :value="c">{{ c }}</a-radio-button>
               </a-radio-group>
-            </a-form-item>
-            <a-form-item label="任务说明" required>
-              <a-textarea v-model:value="pub.description" :rows="4" :maxlength="500" show-count
-                placeholder="详细描述任务内容与要求（做什么、在哪里、注意事项）"></a-textarea>
-            </a-form-item>
-            <a-row :gutter="12">
-              <a-col :span="12">
-                <a-form-item label="认领人数" required>
-                  <a-input-number v-model:value="pub.headcount" :min="1" :max="50" style="width:100%"></a-input-number>
-                </a-form-item>
-              </a-col>
-              <a-col :span="12">
-                <a-form-item label="建议积分 / 人" required>
-                  <a-input-number v-model:value="pub.reward" :min="1" :max="1000" style="width:100%"></a-input-number>
-                </a-form-item>
+              <a-input v-model:value="hallKw" placeholder="🔍 搜索任务标题 / 描述…" style="max-width:220px" allow-clear></a-input>
+            </div>
+            <a-row :gutter="[14,14]">
+              <a-col v-for="t in hallList" :key="t.id" :xs="24" :sm="12" :lg="8">
+                <div class="tcard">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <status-badge :status="t.status" :dead="t.dead"></status-badge>
+                    <span class="cat-tag">{{ t.info.category || '其他' }}</span>
+                    <span class="num" style="margin-left:auto;font-size:11.5px;color:#8a94a0">{{ t.id }}</span>
+                  </div>
+                  <h3>{{ t.title }}</h3>
+                  <div class="desc">{{ t.info.description }}</div>
+                  <div class="meta"><span>👤 {{ t.creator }}</span><span>⏰ 截止 {{ fmtTs(t.info.deadline_ts) }}</span></div>
+                  <div class="foot">
+                    <div class="reward">{{ t.info.reward }}<small> 积分/人</small></div>
+                    <div class="prow">
+                      <a-progress :percent="pct(t)" :show-info="false" size="small" class="progress"></a-progress>
+                      <span class="num">{{ t.claimedCount }}/{{ headOf(t) }} 人</span>
+                      <a-button v-if="canClaim(t)" type="primary" size="small" @click="doClaim(t)">认领</a-button>
+                      <a-tag v-if="joined(t)" :bordered="false" :color="claimColor(joined(t).status)">{{ claimLabel(joined(t).status) }}</a-tag>
+                    </div>
+                  </div>
+                </div>
               </a-col>
             </a-row>
-            <a-form-item label="截止时间" required>
-              <a-date-picker v-model:value="pub.deadline" show-time style="width:100%" placeholder="选择截止时间"></a-date-picker>
-            </a-form-item>
-            <a-button type="primary" block :loading="posting" @click="publish">发布任务（提交后管理员定价上架）</a-button>
-          </a-form>
-        </a-card>
-        <a-empty v-else description="仅教师和管理员可发布任务"></a-empty>
-      </a-tab-pane>
+            <a-empty v-if="hallList.length === 0" description="该筛选条件下暂无任务" style="padding:40px 0"></a-empty>
+          </template>
 
-      <!-- 数据统计 -->
-      <a-tab-pane key="stats" tab="数据统计">
-        <a-row :gutter="[14,14]" style="margin-top:14px">
-          <a-col :xs="24" :md="12">
-            <a-card :bordered="false" style="border-radius:12px" title="📊 任务状态分布">
-              <div v-for="s in statRows" :key="s.label" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                <status-badge :status="s.key"></status-badge>
-                <b class="num">{{ s.count }}</b><span class="muted-small">个任务</span>
+          <!-- 我的面板 -->
+          <template v-else-if="activeView === 'mine'">
+            <div class="panel" style="background:#fff;border:1px solid var(--sasu-line);border-radius:12px;
+              box-shadow:0 2px 8px rgba(16,24,40,.06);padding:16px 18px">
+              <template v-if="me.role === 'STUDENT'">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                  <b>🎒 已认领 {{ myTasks.length }} 个任务</b>
+                  <span class="reward" style="font-size:16px">累计获得 {{ myPoints }} 积分</span>
+                </div>
+                <a-empty v-if="myTasks.length === 0" description="还没有认领任务，去任务大厅看看吧"></a-empty>
+                <div v-for="t in myTasks" :key="t.id" class="task-line">
+                  <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+                    <div>
+                      <h4><status-badge :status="t.status" :dead="t.dead"></status-badge> {{ t.title }}</h4>
+                      <div class="m"><span>👤 {{ t.creator }}</span><span>💰 {{ t.info.reward }} 积分/人</span>
+                        <span>⏰ 截止 {{ fmtTs(t.info.deadline_ts) }}</span></div>
+                    </div>
+                    <span class="status" :class="claimTone(myClaim(t).status)">
+                      <i class="dot"></i>{{ claimLabel(myClaim(t).status) }}</span>
+                  </div>
+                  <div class="claims">
+                    <div class="claim-row">
+                      <a-button v-if="myClaim(t).status === 'claimed'" type="primary" size="small" @click="openSubmit(t)">提交成果</a-button>
+                      <span v-if="myClaim(t).status === 'claimed'" class="muted-small">提交后教师将进行验收</span>
+                      <span v-if="myClaim(t).status === 'submitted'" class="muted-small">已提交，等待教师验收…</span>
+                      <span v-if="myClaim(t).status === 'accepted'" style="color:#2e7d5b;font-weight:700">🎉 验收通过，+{{ t.info.reward }} 积分</span>
+                      <template v-if="myClaim(t).status === 'rejected'">
+                        <span style="color:#c0392b">被驳回：{{ rejectReason(t.id) }}</span>
+                        <a-button type="primary" size="small" @click="openSubmit(t)">重新提交</a-button>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                  <b>📖 已发布 {{ myTasks.length }} 个任务 · 待验收 {{ waitReview }} 项</b>
+                </div>
+                <a-empty v-if="myTasks.length === 0" description="还没有发布过任务"></a-empty>
+                <div v-for="t in myTasks" :key="t.id" class="task-line">
+                  <div style="display:flex;justify-content:space-between;gap:10px">
+                    <div>
+                      <h4><status-badge :status="t.status" :dead="t.dead"></status-badge> {{ t.title }}</h4>
+                      <div class="m"><span>💰 {{ t.info.reward }} 积分/人</span><span>🧑‍🤝‍🧑 {{ t.claimedCount }}/{{ headOf(t) }} 人</span>
+                        <span>⏰ 截止 {{ fmtTs(t.info.deadline_ts) }}</span></div>
+                    </div>
+                    <a-button v-if="isOpen(t)" size="small" @click="doCancel(t)">取消任务</a-button>
+                  </div>
+                  <div v-if="Object.keys(t.claims).length" class="claims">
+                    <div v-for="(c, who) in t.claims" :key="who" class="claim-row">
+                      <span class="who">{{ who }}</span>
+                      <span class="status" :class="claimTone(c.status)"><i class="dot"></i>{{ claimLabel(c.status) }}</span>
+                      <span class="muted-small num">{{ fmtShort(c.ts) }}</span>
+                      <template v-if="c.status === 'submitted'">
+                        <a-button type="primary" size="small" @click="doAccept(t, who)">验收通过</a-button>
+                        <a-button size="small" @click="openReject(t, who)">驳回</a-button>
+                      </template>
+                      <span v-if="c.status === 'accepted'" style="color:#2e7d5b">已发放 {{ t.info.reward }} 积分</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- 发布任务 -->
+          <template v-else-if="activeView === 'publish'">
+            <div class="panel" style="background:#fff;border:1px solid var(--sasu-line);border-radius:12px;
+              box-shadow:0 2px 8px rgba(16,24,40,.06);padding:16px 18px;max-width:640px">
+              <a-alert v-if="pubNotice.text" :type="pubNotice.type" :message="pubNotice.text" show-icon
+                style="margin-bottom:12px" closable @close="pubNotice.text = ''"></a-alert>
+              <a-form layout="vertical">
+                <a-form-item label="任务标题" required>
+                  <a-input v-model:value="pub.title" :maxlength="40" placeholder="如：图书馆新书上架搬运"></a-input>
+                </a-form-item>
+                <a-form-item label="分类" required>
+                  <a-radio-group v-model:value="pub.category" button-style="solid" size="small">
+                    <a-radio-button v-for="c in cats" :key="c" :value="c">{{ c }}</a-radio-button>
+                  </a-radio-group>
+                </a-form-item>
+                <a-form-item label="任务说明" required>
+                  <a-textarea v-model:value="pub.description" :rows="4" :maxlength="500" show-count
+                    placeholder="详细描述任务内容与要求（做什么、在哪里、注意事项）"></a-textarea>
+                </a-form-item>
+                <a-row :gutter="12">
+                  <a-col :span="12">
+                    <a-form-item label="认领人数" required>
+                      <a-input-number v-model:value="pub.headcount" :min="1" :max="50" style="width:100%"></a-input-number>
+                    </a-form-item>
+                  </a-col>
+                  <a-col :span="12">
+                    <a-form-item label="建议积分 / 人" required>
+                      <a-input-number v-model:value="pub.reward" :min="1" :max="1000" style="width:100%"></a-input-number>
+                    </a-form-item>
+                  </a-col>
+                </a-row>
+                <a-form-item label="截止时间" required>
+                  <a-date-picker v-model:value="pub.deadline" show-time style="width:100%" placeholder="选择截止时间"></a-date-picker>
+                </a-form-item>
+                <a-button type="primary" block :loading="posting" @click="publish">发布任务（提交后管理员定价上架）</a-button>
+              </a-form>
+            </div>
+          </template>
+
+          <!-- 任务管理（a-table，主站 TasksView 同款） -->
+          <template v-else-if="activeView === 'manage'">
+            <div class="panel" style="background:#fff;border:1px solid var(--sasu-line);border-radius:12px;
+              box-shadow:0 2px 8px rgba(16,24,40,.06);padding:16px 18px">
+              <div class="filters" style="margin-bottom:12px">
+                <a-radio-group v-model:value="manageFilter" button-style="solid" size="small">
+                  <a-radio-button value="全部">全部</a-radio-button>
+                  <a-radio-button value="pricing">待定价</a-radio-button>
+                  <a-radio-button value="open">招募中</a-radio-button>
+                  <a-radio-button value="full">已满</a-radio-button>
+                  <a-radio-button value="reviewing">验收中</a-radio-button>
+                  <a-radio-button value="completed">已完成</a-radio-button>
+                  <a-radio-button value="cancelled">已取消</a-radio-button>
+                </a-radio-group>
+                <a-input v-model:value="manageKw" placeholder="按任务标题 / 发布人搜索" style="max-width:220px" allow-clear></a-input>
               </div>
-              <a-empty v-if="statRows.length === 0" description="暂无任务"></a-empty>
-            </a-card>
-          </a-col>
-          <a-col :xs="24" :md="12">
-            <a-card :bordered="false" style="border-radius:12px" title="🏆 学生积分榜">
-              <template #extra><a-button size="small" @click="exportJson">📄 导出 JSON</a-button></template>
-              <a-empty v-if="scores.length === 0" description="暂无积分记录"></a-empty>
-              <div v-for="(s, i) in scores" :key="s.who" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                <b style="min-width:78px">#{{ i + 1 }} {{ s.who }}</b>
-                <span class="reward" style="font-size:15px">{{ s.pts }} 积分</span>
-              </div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </a-tab-pane>
-    </a-tabs>
+              <a-table :columns="manageColumns" :data-source="manageList" row-key="id" size="middle"
+                :scroll="{ x: 900 }" :pagination="{ pageSize: 10 }">
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'title'">
+                    <a-button type="link" style="padding:0;height:auto" @click="expandedId = (expandedId === record.id ? '' : record.id)">
+                      {{ record.title }}</a-button>
+                  </template>
+                  <template v-else-if="column.key === 'category'">
+                    <span class="cat-tag">{{ record.info.category || '其他' }}</span>
+                  </template>
+                  <template v-else-if="column.key === 'status'">
+                    <status-badge :status="record.status" :dead="record.dead"></status-badge>
+                  </template>
+                  <template v-else-if="column.key === 'reward'">
+                    <span class="reward num" style="font-size:15px">{{ record.info.reward }}</span>
+                  </template>
+                  <template v-else-if="column.key === 'headcount'">
+                    <span class="num">{{ record.claimedCount }}/{{ headOf(record) }}</span>
+                  </template>
+                  <template v-else-if="column.key === 'action'">
+                    <a-space>
+                      <a-button v-if="canPrice() && record.status === 'pricing'" type="primary" size="small"
+                        @click="doPrice(record)">定价上架</a-button>
+                      <a-button v-if="isOpen(record)" size="small" @click="doCancel(record)">取消</a-button>
+                    </a-space>
+                  </template>
+                </template>
+                <template #expandedRowRender="{ record }">
+                  <div class="claims">
+                    <div v-for="(c, who) in record.claims" :key="who" class="claim-row">
+                      <span class="who">{{ who }}</span>
+                      <span class="status" :class="claimTone(c.status)"><i class="dot"></i>{{ claimLabel(c.status) }}</span>
+                      <span class="muted-small num">{{ fmtShort(c.ts) }}</span>
+                      <template v-if="c.status === 'submitted'">
+                        <a-button type="primary" size="small" @click="doAccept(record, who)">验收通过</a-button>
+                        <a-button size="small" @click="openReject(record, who)">驳回</a-button>
+                      </template>
+                      <span v-if="c.status === 'accepted'" style="color:#2e7d5b">已发放 {{ record.info.reward }} 积分</span>
+                    </div>
+                    <div v-if="Object.keys(record.claims).length === 0" class="muted-small">暂无认领</div>
+                  </div>
+                  <ul class="tline tline-in-table">
+                    <li v-for="ev in [...record.timeline].reverse()" :key="ev.ts">
+                      <b>{{ ev.emoji }} {{ ev.text }}</b> · {{ ev.by || '' }} · {{ fmtShort(ev.ts) }}</li>
+                  </ul>
+                </template>
+              </a-table>
+            </div>
+          </template>
 
-    <footer>校园任务平台 · 单文件版 —— 数据存储于 QuickForm 云端（追加式事件日志，只增不改），导出数据可备份 · 本页面部署到静态托管 / 双击本地打开均可使用</footer>
-  </a-config-provider>
-</div>
+          <!-- 数据统计 -->
+          <template v-else>
+            <a-row :gutter="[14,14]">
+              <a-col :xs="24" :md="12">
+                <div class="panel" style="background:#fff;border:1px solid var(--sasu-line);border-radius:12px;
+                  box-shadow:0 2px 8px rgba(16,24,40,.06);padding:16px 18px">
+                  <b style="display:block;margin-bottom:10px">📊 任务状态分布</b>
+                  <div v-for="s in statRows" :key="s.key" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                    <status-badge :status="s.key"></status-badge>
+                    <b class="num">{{ s.count }}</b><span class="muted-small">个任务</span>
+                  </div>
+                  <a-empty v-if="statRows.length === 0" description="暂无任务"></a-empty>
+                </div>
+              </a-col>
+              <a-col :xs="24" :md="12">
+                <div class="panel" style="background:#fff;border:1px solid var(--sasu-line);border-radius:12px;
+                  box-shadow:0 2px 8px rgba(16,24,40,.06);padding:16px 18px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <b>🏆 学生积分榜</b>
+                    <a-button size="small" @click="exportJson">📄 导出 JSON</a-button>
+                  </div>
+                  <a-empty v-if="scores.length === 0" description="暂无积分记录"></a-empty>
+                  <div v-for="(s, i) in scores" :key="s.who" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                    <b style="min-width:78px">#{{ i + 1 }} {{ s.who }}</b>
+                    <span class="reward" style="font-size:15px">{{ s.pts }} 积分</span>
+                  </div>
+                </div>
+              </a-col>
+            </a-row>
+          </template>
 
-  <!-- 身份选择 -->
-  <a-modal v-model:open="roleMaskVisible" :closable="!!me" :mask-closable="false" :keyboard="false"
-    title="你是谁？" :width="430" :footer="null" centered>
-    <p class="muted-small" style="margin-top:0">选择你的角色并填写姓名（将作为所有操作的署名）。</p>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px">
-      <div v-for="r in roleCards" :key="r.role" class="tcard" style="padding:13px 8px;text-align:center;align-items:center"
-        :style="{border: meRoleDraft === r.role ? '2px solid var(--sasu-brand)' : '2px solid var(--sasu-line)',
-          background: meRoleDraft === r.role ? 'var(--sasu-brand-light)' : '#fff', cursor:'pointer'}"
-        @click="meRoleDraft = r.role">
-        <div style="font-size:22px">{{ r.emoji }}</div>
-        <b style="font-size:13.5px">{{ r.label }}</b>
-        <div class="muted-small">{{ r.desc }}</div>
-      </div>
-    </div>
-    <a-form layout="vertical">
-      <a-form-item label="你的姓名" required>
-        <a-input v-model:value="roleNameDraft" :maxlength="20" placeholder="真实姓名，如：张小明"></a-input>
-      </a-form-item>
-    </a-form>
-    <a-button type="primary" block @click="confirmRole">进入平台</a-button>
-  </a-modal>
+          <footer style="margin-top:20px;text-align:center;color:#8a94a0;font-size:12.5px">
+            校园任务平台 · 单文件版 —— 数据存储于 QuickForm 云端（追加式事件日志，只增不改），导出数据可备份</footer>
+        </div>
+      </a-layout-content>
+    </a-layout>
+  </a-layout>
 
   <!-- 通用输入弹窗（提交成果 / 定价 / 驳回理由） -->
-  <a-modal v-model:open="inputModal.open" :title="inputModal.title" @ok="inputModal.onOk" :ok-text="'确认'">
+  <a-modal v-model:open="inputModal.open" :title="inputModal.title" @ok="inputModal.onOk" ok-text="确认" cancel-text="取消">
     <p v-if="inputModal.desc" class="muted-small" style="margin-top:0">{{ inputModal.desc }}</p>
     <a-textarea v-if="inputModal.multiline" v-model:value="inputModal.value" :rows="3" :maxlength="300"
       :placeholder="inputModal.placeholder"></a-textarea>
@@ -450,13 +475,13 @@ footer{margin:26px 0 30px;text-align:center;color:var(--faint);font-size:12.5px}
       :min="1" :max="1000" :placeholder="inputModal.placeholder"></a-input-number>
     <a-input v-else v-model:value="inputModal.value" :maxlength="200" :placeholder="inputModal.placeholder"></a-input>
   </a-modal>
+  </a-config-provider>
 </div>
 
 <script>
 /* ============================================================
    校园任务平台 · 单文件版（Vue 3 + Ant Design Vue 4 via CDN）
-   架构：QuickForm append-only 事件日志（同老师实例协议，record_type
-   = sasu-task / sasu-event 与「需求征集」数据共存互不干扰）
+   架构：QuickForm append-only 事件日志（与老师实例同 API 协议）
    ============================================================ */
 var API_GET_ALL = 'https://quickform.cn/api/uu810fv5nl/all';
 var API_COUNT   = 'https://quickform.cn/api/uu810fv5nl/count';
@@ -474,7 +499,16 @@ dayjs.extend(window.dayjs_plugin_weekYear);
 dayjs.extend(window.dayjs_plugin_advancedFormat);
 dayjs.extend(window.dayjs_plugin_quarterOfYear);
 dayjs.locale('zh-cn');
+var AntdLib = window.antd || window.Antd;
 
+var zhLocale = {
+  locale: 'zh-cn',
+  Pagination: { items_per_page: '条/页', prev_page: '上一页', next_page: '下一页', page: '页' },
+  Empty: { description: '暂无数据' },
+  Table: { emptyText: '暂无数据' },
+  Modal: { okText: '确定', cancelText: '取消' }
+};
+/* 主站设计 token（apps/web/src/theme.ts 同款） */
 var antdTheme = { token: {
   colorPrimary: '#b4232a', colorLink: '#b4232a', colorInfo: '#1f4e79',
   colorInfoBg: '#f0f5fa', colorInfoBgHover: '#e4eef6', colorInfoBorder: '#cfdeed',
@@ -486,18 +520,6 @@ var antdTheme = { token: {
   boxShadow: '0 6px 24px rgba(16, 24, 40, 0.08)',
   boxShadowSecondary: '0 2px 8px rgba(16, 24, 40, 0.06)'
 } };
-var zhLocale = {
-  locale: 'zh-cn',
-  Pagination: { items_per_page: '条/页', prev_page: '上一页', next_page: '下一页', page: '页' },
-  Empty: { description: '暂无数据' },
-  Table: { emptyText: '暂无数据' },
-  Modal: { okText: '确定', cancelText: '取消' },
-  DatePicker: { locale: 'zh_cn', placeholder: '请选择日期', yearPlaceholder: '请选择年份',
-    monthPlaceholder: '请选择月份', today: '今天', now: '此刻', ok: '确定' },
-  global: { placeholder: '请选择' }
-};
-/* UMD 全局名兼容：ant-design-vue@4 UMD 挂载为 window.antd（小写） */
-var AntdLib = window.antd || window.Antd;
 
 /* ---------- 工具 ---------- */
 function pad(n){ return n < 10 ? '0' + n : '' + n; }
@@ -516,7 +538,6 @@ function deviceId(){ var id = '';
 /* ---------- 数据层 ---------- */
 function isMine(r){ return r && (r.record_type === 'sasu-task' || r.record_type === 'sasu-event')
   && r.form_type === FORM_TYPE && !r.__probe; }
-/* append-only 事件流 → 任务对象（两遍遍历：任务主记录可能晚于事件出现） */
 function derive(records){
   var tasks = {};
   var i, r;
@@ -589,19 +610,20 @@ var app = Vue.createApp({
   setup: function(){
     var reactive = Vue.reactive, ref = Vue.ref, computed = Vue.computed, onMounted = Vue.onMounted;
     var me = ref(null);
-    var raw = ref([]);            /* 过滤后的 sasu-* 记录 */
-    var tasks = ref([]);          /* derive 结果（按创建时间倒序） */
+    var raw = ref([]);
+    var tasks = ref([]);
     var byId = {};
     var conn = reactive({ kind: 'load', text: '正在连接数据源…' });
     var posting = ref(false);
     var lastCount = null;
 
-    var activeTab = ref('hall');
+    var activeView = ref('hall');
     var hallCat = ref('全部');
     var hallKw = ref('');
-    var roleMaskVisible = ref(!me.value);
-    var meRoleDraft = ref('STUDENT');
+    var manageFilter = ref('全部');
+    var manageKw = ref('');
     var roleNameDraft = ref('');
+    var meRoleDraft = ref('STUDENT');
     var pub = reactive({ title: '', category: '校园服务', description: '', headcount: 1, reward: 20, deadline: null });
     var pubNotice = reactive({ type: 'info', text: '' });
     var inputModal = reactive({ open: false, title: '', desc: '', placeholder: '', value: '', multiline: false, number: false, onOk: function(){} });
@@ -624,8 +646,8 @@ var app = Vue.createApp({
       return fetch(API_GET_ALL + '?_=' + Date.now(), { cache: 'no-store', headers: { 'Accept': 'application/json' } })
         .then(function(res){ if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
         .then(function(data){ applyRecords((data && data.submissions) || []);
-          conn.kind = 'ok'; conn.text = '已连接 QuickForm 数据源 · 共 ' + raw.value.length + ' 条记录'; })
-        .catch(function(err){ conn.kind = 'err'; conn.text = '连接失败：' + (err.message || '网络异常'); });
+          conn.kind = 'ok'; conn.text = '已连接 · ' + raw.value.length + ' 条记录'; })
+        .catch(function(err){ conn.kind = 'err'; conn.text = '连接失败'; });
     }
     function pollLoop(){
       fetch(API_COUNT, { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; })
@@ -664,12 +686,6 @@ var app = Vue.createApp({
     }
 
     /* ---- 派生 ---- */
-    var hero = computed(function(){
-      return { tasks: tasks.value.length,
-        open: tasks.value.filter(function(t){ return t.status === 'open' && !t.dead; }).length,
-        done: tasks.value.filter(function(t){ return t.status === 'completed'; }).length,
-        points: tasks.value.reduce(function(a, t){ return a + t.totalPoints; }, 0) };
-    });
     var hallList = computed(function(){
       return tasks.value.filter(function(t){
         if (t.status === 'pricing') return false;
@@ -698,7 +714,21 @@ var app = Vue.createApp({
       });
       return n;
     });
-    var pricingTasks = computed(function(){ return tasks.value.filter(function(t){ return t.status === 'pricing'; }); });
+    var pricingCount = computed(function(){ return tasks.value.filter(function(t){ return t.status === 'pricing'; }).length; });
+    var manageList = computed(function(){
+      return tasks.value.filter(function(t){
+        if (manageFilter.value !== '全部'){
+          var dead = t.dead && (t.status==='open'||t.status==='full'||t.status==='reviewing');
+          if (manageFilter.value === 'dead'){ if (!dead) return false; }
+          else if (t.status !== manageFilter.value) return false;
+        }
+        if (manageKw.value){
+          var kw = manageKw.value.toLowerCase();
+          if (t.title.toLowerCase().indexOf(kw) < 0 && String(t.creator || '').toLowerCase().indexOf(kw) < 0) return false;
+        }
+        return true;
+      });
+    });
     var statRows = computed(function(){
       var by = {};
       tasks.value.forEach(function(t){ var k = t.dead && (t.status==='open'||t.status==='full'||t.status==='reviewing') ? 'dead' : t.status; by[k] = (by[k]||0)+1; });
@@ -712,6 +742,34 @@ var app = Vue.createApp({
         .sort(function(a, b){ return b.pts - a.pts; });
     });
 
+    /* ---- 菜单与页面元信息（主站 AdminShell 分组结构） ---- */
+    var ICONS = {
+      hall: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1"/><rect x="9" y="9" width="5.5" height="5.5" rx="1"/></svg>',
+      mine: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="5" r="2.8"/><path d="M2.5 14c.6-3 2.8-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/></svg>',
+      publish: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 5v6M5 8h6"/></svg>',
+      manage: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4.5h12M4.5 8h7M2 11.5h12"/><circle cx="5" cy="4.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="11" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="6" cy="11.5" r="1.3" fill="currentColor" stroke="none"/></svg>',
+      stats: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 14V8M6 14V3M10 14v-5M14 14V6"/></svg>'
+    };
+    var menuItems = computed(function(){
+      if (!me.value) return [];
+      var items = [];
+      if (me.value.role === 'STUDENT') items.push({ key: 'hall', label: '任务大厅', icon: ICONS.hall });
+      items.push({ key: 'mine', label: '我的面板', icon: ICONS.mine });
+      if (me.value.role !== 'STUDENT') items.push({ key: 'publish', label: '发布任务', icon: ICONS.publish });
+      if (me.value.role !== 'STUDENT') items.push({ key: 'manage', label: '任务管理', icon: ICONS.manage, badge: pricingCount.value || '' });
+      return items;
+    });
+    var pageMeta = computed(function(){
+      var map = {
+        hall:    { title: '任务大厅', subtitle: '浏览并认领适合你的任务，认领后按时提交成果即可获得积分' },
+        mine:    { title: '我的面板', subtitle: '你认领的任务与个人积分、以及你发布任务的处理进展' },
+        publish: { title: '发布任务', subtitle: '发布后由管理员定价上架，学生认领并提交成果' },
+        manage:  { title: '任务管理', subtitle: '全部任务的定价上架、验收处理与取消；点击标题展开详情与时间线' },
+        stats:   { title: '数据统计', subtitle: '任务状态分布与学生积分排行，支持导出全部原始数据' }
+      };
+      return map[activeView.value] || { title: '', subtitle: '' };
+    });
+
     /* ---- 方法 ---- */
     var roleLabel = computed(function(){ return me.value ? { STUDENT:'学生', TEACHER:'教师', ADMIN:'管理员' }[me.value.role] : ''; });
     var connColor = computed(function(){ return conn.kind === 'ok' ? 'success' : conn.kind === 'err' ? 'error' : 'processing'; });
@@ -719,12 +777,13 @@ var app = Vue.createApp({
     function headOf(t){ return Number(t.info.headcount) || 1; }
     function pct(t){ return Math.min(100, Math.round(t.claimedCount / headOf(t) * 100)); }
     function isOpen(t){ return !t.dead && (t.status === 'open' || t.status === 'full' || t.status === 'reviewing'); }
+    function canPrice(){ return me.value && me.value.role === 'ADMIN'; }
     function canClaim(t){ return me.value && me.value.role === 'STUDENT' && t.status === 'open' && !t.dead && !t.claims[me.value.name]; }
     function joined(t){ return me.value ? t.claims[me.value.name] : null; }
-    function myClaim(t){ return t.claims[me.value.name] || { status: 'claimed' }; }
-    function claimEventOf(t){ var c = t.claims[me.value.name]; return c ? c.status : 'claimed'; }
+    function myClaim(t){ return t.claims[me.value.name] || { status: 'claimed', ts: 0 }; }
     function claimLabel(s){ return { claimed: '已认领', submitted: '已提交', accepted: '已通过', rejected: '被驳回' }[s] || '已认领'; }
     function claimColor(s){ return { claimed: 'warning', submitted: 'processing', accepted: 'success', rejected: 'error' }[s] || 'default'; }
+    function claimTone(s){ return { claimed: 'warning', submitted: 'brand', accepted: 'success', rejected: 'danger' }[s] || 'muted'; }
     function rejectReason(taskId){
       var t = byId[taskId]; if (!t) return '未通过验收';
       for (var i = t.events.length - 1; i >= 0; i--){
@@ -733,9 +792,8 @@ var app = Vue.createApp({
       }
       return '未通过验收';
     }
-    function myClaim(t){ return t.claims[me.value.name] || { status: 'claimed', ts: 0 }; }
 
-    /* ---- 操作（确认弹窗用 Modal.confirm，输入用通用 inputModal） ---- */
+    /* ---- 操作 ---- */
     function doClaim(t){
       AntdLib.Modal.confirm({ title: '认领任务', content: '确认认领「' + t.title + '」？认领后需按时提交成果。',
         okText: '确认认领', onOk: function(){
@@ -816,7 +874,6 @@ var app = Vue.createApp({
           pubNotice.type = 'success';
           pubNotice.text = '✅ 任务已发布（编号 ' + id + '），等待管理员定价上架。';
           pub.title = ''; pub.description = ''; pub.headcount = 1; pub.reward = 20;
-          activeTab.value = 'mine';
         })
         .catch(function(err){
           pubNotice.type = 'error';
@@ -831,8 +888,6 @@ var app = Vue.createApp({
       a.download = 'campus-tasks-export-' + new Date().toISOString().slice(0, 10) + '.json';
       document.body.appendChild(a); a.click(); a.remove();
     }
-    /* 供外部轮询钩子调用（检测到 count 变化时触发全量刷新） */
-    window.__appRefresh = function(){ refresh(false); };
 
     /* ---- 身份 ---- */
     function confirmRole(){
@@ -840,17 +895,35 @@ var app = Vue.createApp({
       if (!name){ AntdLib.message.warning('请填写姓名'); return; }
       me.value = { role: meRoleDraft.value, name: name };
       try { localStorage.setItem('sasu_me', JSON.stringify(me.value)); } catch(e) {}
-      roleMaskVisible.value = false;
+      activeView.value = me.value.role === 'STUDENT' ? 'hall' : 'mine';
     }
-    function showRoleMask(allowCancel){ meRoleDraft.value = me.value ? me.value.role : 'STUDENT'; roleMaskVisible.value = true; }
+    function showRoleMask(){ meRoleDraft.value = me.value ? me.value.role : 'STUDENT'; }
+    function switchView(key){ activeView.value = key; }
     function loadMe(){
       try { var v = localStorage.getItem('sasu_me');
         if (v){ var m = JSON.parse(v); if (m && m.role && m.name) me.value = m; } } catch(e) {}
     }
+    /* 切换身份：重开身份页（置空 me） */
+    function switchRole(){
+      try { localStorage.removeItem('sasu_me'); } catch(e) {}
+      me.value = null;
+      roleNameDraft.value = '';
+    }
+
+    var manageColumns = [
+      { title: '标题', key: 'title', width: 200, ellipsis: true },
+      { title: '发布人', key: 'creator', width: 100 },
+      { title: '分类', key: 'category', width: 100 },
+      { title: '状态', key: 'status', width: 110 },
+      { title: '积分/人', key: 'reward', width: 90, align: 'right' },
+      { title: '人数', key: 'headcount', width: 80, align: 'center' },
+      { title: '截止', key: 'deadline', width: 150 },
+      { title: '操作', key: 'action', width: 150, fixed: 'right' }
+    ];
 
     onMounted(function(){
       loadMe();
-      if (!me.value) roleMaskVisible.value = true;
+      if (me.value) activeView.value = me.value.role === 'STUDENT' ? 'hall' : 'mine';
       refresh(true).then(function(){
         return fetch(API_COUNT, { cache: 'no-store' }).then(function(r){ return r.json(); })
           .then(function(d){ if (d) lastCount = d.total_submissions; });
@@ -859,15 +932,17 @@ var app = Vue.createApp({
 
     return { me: me, antdTheme: antdTheme, zhLocale: zhLocale,
       connColor: connColor, connText: connText, roleLabel: roleLabel, roleCards: roleCards,
-      meRoleDraft: meRoleDraft, roleNameDraft: roleNameDraft, roleMaskVisible: roleMaskVisible,
-      confirmRole: confirmRole, showRoleMask: showRoleMask,
-      activeTab: activeTab, cats: CATS, hallCat: hallCat, hallKw: hallKw,
+      meRoleDraft: meRoleDraft, roleNameDraft: roleNameDraft, confirmRole: confirmRole, switchRole: switchRole,
+      activeView: activeView, switchView: switchView, menuItems: menuItems, pageMeta: pageMeta,
+      cats: CATS, hallCat: hallCat, hallKw: hallKw, hallList: hallList,
       pub: pub, pubNotice: pubNotice, posting: posting, inputModal: inputModal,
-      hero: hero, hallList: hallList, myTasks: myTasks, myPoints: myPoints, waitReview: waitReview,
-      pricingTasks: pricingTasks, statRows: statRows, scores: scores,
+      manageFilter: manageFilter, manageKw: manageKw, manageList: manageList, manageColumns: manageColumns,
+      myTasks: myTasks, myPoints: myPoints, waitReview: waitReview, pricingCount: pricingCount,
+      statRows: statRows, scores: scores,
       headOf: headOf, pct: pct, isOpen: isOpen, canClaim: canClaim, joined: joined,
-      myClaim: myClaim, claimEventOf: claimEventOf, claimLabel: claimLabel, claimColor: claimColor,
+      myClaim: myClaim, claimLabel: claimLabel, claimColor: claimColor, claimTone: claimTone,
       rejectReason: rejectReason, fmtTs: fmtTs, fmtShort: fmtShort,
+      canPrice: canPrice,
       doClaim: doClaim, openSubmit: openSubmit, doAccept: doAccept, openReject: openReject,
       doPrice: doPrice, doCancel: doCancel, publish: publish, exportJson: exportJson,
       refresh: function(s){ refresh(s); } };
@@ -878,39 +953,20 @@ var app = Vue.createApp({
 app.component('status-badge', {
   props: { status: String, dead: Boolean },
   setup: function(props){
-    var META = { pricing:['⏳','待定价','muted'], open:['📣','招募中','brand'], full:['🧑‍🤝‍🧑','已满','muted'],
-      reviewing:['📋','验收中','brand'], completed:['✅','已完成','success'], cancelled:['🚫','已取消','muted'],
-      dead:['⏰','已截止','muted'] };
+    var META = { pricing:['待定价','muted'], open:['招募中','brand'], full:['已满','muted'],
+      reviewing:['验收中','brand'], completed:['已完成','success'], cancelled:['已取消','muted'],
+      dead:['已截止','muted'] };
     var m = Vue.computed(function(){
       var k = (props.dead && (props.status==='open'||props.status==='full'||props.status==='reviewing')) ? 'dead' : props.status;
       return META[k] || META.pricing;
     });
-    return function(){ return Vue.h('span', { class: 'status ' + m.value[2] },
-      [ Vue.h('i', { class: 'dot' }), m.value[0] + ' ' + m.value[1] ]); };
+    return function(){ return Vue.h('span', { class: 'status ' + m.value[1] },
+      [ Vue.h('i', { class: 'dot' }), m.value[0] ]); };
   }
 });
 
 app.use(AntdLib);
 app.mount('#app');
-
-/* 轮询启动（挂载后） */
-setTimeout(function(){ pollLoopInit(); }, 500);
-function pollLoopInit(){
-  fetch(API_COUNT, { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){ if (d) window.__lastCount = d.total_submissions; }).catch(function(){});
-  setInterval(function(){
-    fetch(API_COUNT, { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){
-        if (d && typeof d.total_submissions === 'number' && window.__lastCount !== null && d.total_submissions !== window.__lastCount){
-          /* 触发 app 内刷新：直接调暴露在 window 的钩子 */
-          if (window.__appRefresh) window.__appRefresh();
-        }
-        if (d) window.__lastCount = d.total_submissions;
-      }).catch(function(){});
-  }, POLL_MS);
-}
-/* 暴露刷新钩子 */
-window.__appRefresh = function(){ /* 由 app setup 覆盖 */ };
 </script>
 </body>
 </html>
