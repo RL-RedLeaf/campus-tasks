@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>校园任务平台 | 上科大附校</title>
+<meta name="color-scheme" content="light">
+<style>
+:root{
+  --ink:#1f2329; --muted:#5c6670; --faint:#8a94a0; --line:#e8ecf1;
+  --bg:#f7f8fa; --white:#fff;
+  --brand:#b4232a; --brand-hover:#8f1b21; --brand-light:#fbeeef;
+  --blue:#1f4e79; --blue-bg:#edf3f9;
+  --green:#2e7d5b; --green-bg:#e9f4ef;
+  --amber:#c77700; --amber-bg:#fdf3e3;
+  --red:#c0392b; --red-bg:#fdeceb;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -12px rgba(16,24,40,.14);
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-decoration:none}
+button,input,textarea,select{font:inherit}
+.container{width:min(1180px,calc(100% - 32px));margin:0 auto}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- 顶栏 ---------- */
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
+  height:58px;padding:0 20px;background:rgba(255,255,255,.94);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
+.brand .mark{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:14px;
+  background:var(--brand);box-shadow:0 3px 10px rgba(180,35,42,.3)}
+.brand small{font-weight:600;color:var(--muted);font-size:12px;border-left:1px solid var(--line);padding-left:10px}
+.spacer{flex:1}
+.conn{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.conn .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.conn.ok .dot{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+.conn.err .dot{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15)}
+.conn.load .dot{background:#f59e0b;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;
+  border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600;transition:all .15s}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-hover)}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
+.btn-sm{padding:5px 11px;font-size:13px;border-radius:8px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.whoami{display:inline-flex;align-items:center;gap:8px;background:var(--brand-light);border-radius:999px;
+  padding:5px 12px 5px 6px;font-size:13px}
+.whoami .avatar{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;
+  place-items:center;font-size:12px;font-weight:700}
+.whoami b{font-weight:700}
+.whoami .rl{color:var(--brand);font-weight:600}
+.whoami button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px}
+.whoami button:hover{color:var(--brand)}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:4px;margin:18px 0 0;border-bottom:2px solid var(--line);overflow-x:auto}
+.tab{border:0;background:none;padding:10px 16px;font-weight:600;color:var(--muted);cursor:pointer;
+  border-radius:9px 9px 0 0;font-size:14px;white-space:nowrap;position:relative}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--brand);background:var(--brand-light)}
+.tab.on::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--brand)}
+.tab .bdg{display:inline-block;min-width:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:#fff;
+  font-size:11px;line-height:18px;text-align:center;margin-left:4px;font-weight:700}
+
+/* ---------- Hero ---------- */
+.hero{margin-top:18px;background:linear-gradient(135deg,#b4232a,#d96c5f);border-radius:16px;color:#fff;
+  padding:22px 26px;box-shadow:0 10px 30px -12px rgba(180,35,42,.5)}
+.hero h1{margin:0;font-size:21px;letter-spacing:.02em}
+.hero p{margin:6px 0 0;opacity:.92;font-size:13.5px}
+.hero-stats{display:flex;gap:26px;margin-top:14px;flex-wrap:wrap}
+.hstat{min-width:88px}
+.hstat b{display:block;font-size:22px;font-weight:800}
+.hstat span{font-size:12px;opacity:.85}
+
+/* ---------- 卡片与网格 ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:14px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:16px 18px}
+.tcard{display:flex;flex-direction:column;gap:9px;transition:box-shadow .15s}
+.tcard:hover{box-shadow:0 4px 18px -6px rgba(16,24,40,.18)}
+.tcard .t-top{display:flex;align-items:center;gap:8px}
+.cat-tag{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--blue-bg);color:var(--blue);font-weight:600}
+.tcard h3{margin:0;font-size:15.5px;line-height:1.45}
+.tcard .desc{color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard .meta{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.tcard .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--line);
+  padding-top:9px;margin-top:2px}
+.reward{font-size:19px;font-weight:800;color:var(--brand)}
+.reward small{font-size:12px;font-weight:600;color:var(--muted)}
+.progress{height:7px;border-radius:999px;background:var(--line);overflow:hidden;flex:1}
+.progress i{display:block;height:100%;background:var(--brand);border-radius:999px}
+.prow{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+
+/* ---------- 状态徽章 ---------- */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:3px 10px;
+  border-radius:999px;border:1px solid}
+.st-pricing{background:#f3f4f6;color:#6b7280;border-color:#e5e7eb}
+.st-open{background:var(--green-bg);color:var(--green);border-color:#bfe0cf}
+.st-full{background:var(--amber-bg);color:var(--amber);border-color:#f3d9a4}
+.st-review{background:var(--blue-bg);color:var(--blue);border-color:#c5d7ea}
+.st-completed{background:var(--green-bg);color:var(--green);border-color:#bfe0cf}
+.st-cancelled{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;text-decoration:line-through}
+.st-dead{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb}
+.st-person{background:var(--blue-bg);color:var(--blue);border-color:#c5d7ea}
+.st-claimed{background:var(--amber-bg);color:var(--amber);border-color:#f3d9a4}
+.st-submitted{background:var(--blue-bg);color:var(--blue);border-color:#c5d7ea}
+.st-accepted{background:var(--green-bg);color:var(--green);border-color:#bfe0cf}
+.st-rejected{background:var(--red-bg);color:var(--red);border-color:#f2c4c0}
+
+/* ---------- 筛选条 ---------- */
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;
+  background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font-size:13px;
+  cursor:pointer;font-weight:600;color:var(--muted)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.chip:hover{border-color:var(--brand)}
+.search{flex:1;min-width:160px;border:1px solid var(--line);border-radius:9px;padding:7px 12px;outline:none}
+.search:focus{border-color:var(--brand)}
+
+/* ---------- 面板/明细 ---------- */
+.panel{margin-top:16px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden}
+.panel-h{padding:13px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:14.5px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-b{padding:14px 18px}
+.task-line{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+.task-line:last-child{margin-bottom:0}
+.task-line .tl{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.task-line h4{margin:0 0 4px;font-size:14.5px}
+.task-line .m{font-size:12.5px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.claims{margin-top:9px;border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:7px}
+.claim-row{display:flex;align-items:center;gap:9px;font-size:13px;flex-wrap:wrap}
+.claim-row .who{font-weight:700;min-width:70px}
+.tline{list-style:none;margin:8px 0 0;padding:0 0 0 4px;border-left:2px solid var(--line)}
+.tline li{position:relative;padding:0 0 8px 14px;font-size:12.5px;color:var(--muted)}
+.tline li::before{content:'';position:absolute;left:-5px;top:5px;width:8px;height:8px;border-radius:50%;
+  background:var(--faint)}
+.tline li b{color:var(--ink)}
+
+/* ---------- 表单 ---------- */
+.form-card{max-width:640px;margin:16px auto 0}
+.field{margin-bottom:13px}
+.label{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13.5px;margin-bottom:6px}
+.label .req{color:var(--brand)}
+.label .hint{font-weight:400;color:var(--faint);font-size:12px}
+.input,.textarea,.select{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none;
+  background:#fff;transition:border-color .15s}
+.input:focus,.textarea:focus,.select:focus{border-color:var(--brand)}
+.textarea{resize:vertical;min-height:88px}
+.err{display:none;color:var(--red);font-size:12.5px;margin-top:4px}
+.err.show{display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+
+/* ---------- 提示 ---------- */
+.notice{display:none;border-radius:10px;padding:11px 14px;font-size:13.5px;margin:12px 0}
+.notice.show{display:block}
+.notice.info{background:var(--blue-bg);color:var(--blue)}
+.notice.ok{background:var(--green-bg);color:var(--green)}
+.notice.err{background:var(--red-bg);color:var(--red)}
+.empty{padding:34px 16px;text-align:center;color:var(--faint)}
+.empty .big{font-size:34px;margin-bottom:6px}
+
+/* ---------- 身份弹层 ---------- */
+.mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:grid;place-items:center;backdrop-filter:blur(3px)}
+/* 关键：显式 display:grid 会盖掉 [hidden] 的 UA 样式，必须显式关（否则遮罩永久拦截全页点击） */
+.mask[hidden]{display:none}
+.role-box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:26px;width:min(420px,calc(100% - 40px))}
+.role-box h3{margin:0 0 4px;font-size:17px}
+.role-box p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.role-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+.role-card{border:2px solid var(--line);border-radius:11px;padding:13px 8px;text-align:center;cursor:pointer;transition:all .15s}
+.role-card .em{font-size:22px}
+.role-card b{display:block;font-size:13.5px;margin-top:4px}
+.role-card:hover{border-color:var(--brand)}
+.role-card.on{border-color:var(--brand);background:var(--brand-light)}
+.role-card .d{font-size:11px;color:var(--faint)}
+footer{margin:26px 0 30px;text-align:center;color:var(--faint);font-size:12.5px}
+
+@media(max-width:640px){
+  .row2{grid-template-columns:1fr}
+  .hero-stats{gap:14px}
+  .whoami .rl{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="mark">任</span>校园任务平台<small>上科大附校</small></div>
+  <div class="spacer"></div>
+  <div class="conn load" id="conn" role="status" aria-live="polite"><i class="dot"></i><span class="txt">正在连接数据源…</span></div>
+  <button class="btn btn-sm btn-ghost" id="btnRefresh" type="button">↻ 刷新</button>
+  <div id="whoamiSlot"></div>
+</header>
+
+<div class="container">
+  <section class="hero">
+    <h1>校园任务平台</h1>
+    <p>教师发布任务 → 管理员定价上架 → 学生认领并提交 → 验收通过即获得积分。全程留痕，数据可导出。</p>
+    <div class="hero-stats">
+      <div class="hstat"><b id="hsTasks">—</b><span>任务总数</span></div>
+      <div class="hstat"><b id="hsOpen">—</b><span>招募中</span></div>
+      <div class="hstat"><b id="hsDone">—</b><span>已完成</span></div>
+      <div class="hstat"><b id="hsPoints">—</b><span>累计发放积分</span></div>
+    </div>
+  </section>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-tab="hall">任务大厅</button>
+    <button class="tab" data-tab="mine">我的面板</button>
+    <button class="tab" data-tab="manage">任务管理</button>
+    <button class="tab" data-tab="stats">统计</button>
+  </nav>
+
+  <!-- 任务大厅 -->
+  <section id="view-hall">
+    <div class="filters">
+      <span class="chip on" data-cat="全部">全部</span>
+      <span class="chip" data-cat="校园服务">校园服务</span>
+      <span class="chip" data-cat="宣传设计">宣传设计</span>
+      <span class="chip" data-cat="技术支持">技术支持</span>
+      <span class="chip" data-cat="卫生劳动">卫生劳动</span>
+      <span class="chip" data-cat="活动协助">活动协助</span>
+      <span class="chip" data-cat="其他">其他</span>
+      <input class="search" id="hallSearch" placeholder="搜索任务标题 / 描述…">
+    </div>
+    <div id="hallList" class="grid"></div>
+  </section>
+
+  <!-- 我的面板 -->
+  <section id="view-mine" hidden></section>
+
+  <!-- 任务管理（教师 / 管理员） -->
+  <section id="view-manage" hidden>
+    <div id="manageBody"></div>
+  </section>
+
+  <!-- 统计 -->
+  <section id="view-stats" hidden>
+    <div id="statsBody"></div>
+  </section>
+
+  <!-- 发布任务 -->
+  <section id="view-publish" hidden>
+    <div class="form-card card">
+      <h3 style="margin:0 0 12px">发布任务</h3>
+      <div class="notice" id="pubNotice"></div>
+      <div class="field">
+        <div class="label">任务标题 <span class="req">*</span></div>
+        <input class="input" id="pTitle" maxlength="40" placeholder="如：图书馆新书上架搬运">
+        <div class="err" id="eTitle">请输入任务标题</div>
+      </div>
+      <div class="field">
+        <div class="label">分类 <span class="req">*</span></div>
+        <div class="chips" id="pCats">
+          <label class="chip"><input type="radio" name="pcat" value="校园服务" style="display:none">校园服务</label>
+          <label class="chip"><input type="radio" name="pcat" value="宣传设计" style="display:none">宣传设计</label>
+          <label class="chip"><input type="radio" name="pcat" value="技术支持" style="display:none">技术支持</label>
+          <label class="chip"><input type="radio" name="pcat" value="卫生劳动" style="display:none">卫生劳动</label>
+          <label class="chip"><input type="radio" name="pcat" value="活动协助" style="display:none">活动协助</label>
+          <label class="chip"><input type="radio" name="pcat" value="其他" style="display:none">其他</label>
+        </div>
+        <div class="err" id="eCat">请选择分类</div>
+      </div>
+      <div class="field">
+        <div class="label">任务说明 <span class="req">*</span><span class="hint">做什么、在哪里、注意事项</span></div>
+        <textarea class="textarea" id="pDesc" maxlength="500" placeholder="详细描述任务内容与要求"></textarea>
+        <div class="err" id="eDesc">请填写任务说明（至少 10 字）</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <div class="label">认领人数 <span class="req">*</span></div>
+          <input class="input num" id="pCount" type="number" min="1" max="50" value="1">
+          <div class="err" id="eCount">人数需为 1-50 的整数</div>
+        </div>
+        <div class="field">
+          <div class="label">建议积分 / 人 <span class="req">*</span><span class="hint">管理员定价后生效</span></div>
+          <input class="input num" id="pReward" type="number" min="1" max="1000" value="20">
+          <div class="err" id="eReward">积分需为正整数</div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="label">截止时间 <span class="req">*</span></div>
+        <input class="input" id="pDeadline" type="datetime-local">
+        <div class="err" id="eDead">请选择未来的截止时间</div>
+      </div>
+      <button class="btn btn-primary" id="btnPublish" style="width:100%">发布任务（提交后管理员定价上架）</button>
+    </div>
+  </section>
+
+  <footer>
+    校园任务平台 · 单文件版 —— 数据存储于 QuickForm 云端（追加式事件日志，只增不改），
+    <a href="#" id="btnExport">导出全部数据 JSON</a> · 本页面保存到桌面即可双击使用
+  </footer>
+</div>
+
+<!-- 身份选择 -->
+<div class="mask" id="roleMask" hidden>
+  <div class="role-box">
+    <h3>你是谁？</h3>
+    <p>选择你的角色并填写姓名（将作为所有操作的署名，提交后不可更改）。</p>
+    <div class="role-cards" id="roleCards">
+      <div class="role-card on" data-role="STUDENT"><div class="em">🎒</div><b>学生</b><div class="d">认领任务赚积分</div></div>
+      <div class="role-card" data-role="TEACHER"><div class="em">📖</div><b>教师</b><div class="d">发布任务做验收</div></div>
+      <div class="role-card" data-role="ADMIN"><div class="em">🛡️</div><b>管理员</b><div class="d">定价上架与监督</div></div>
+    </div>
+    <div class="field">
+      <div class="label">你的姓名 <span class="req">*</span></div>
+      <input class="input" id="roleName" maxlength="20" placeholder="真实姓名，如：张小明">
+      <div class="err" id="eRoleName">请填写姓名</div>
+    </div>
+    <button class="btn btn-primary" id="btnRoleOk" style="width:100%">进入平台</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   校园任务平台 · 单文件版（append-only 事件日志架构）
+   - 存储：QuickForm 云端（只读 + 只追加，不支持修改/删除）
+   - GET  /all  全量事件，前端按 task_id 归集、按时间排序推导状态
+   - POST 追加事件：record_type = sasu-task（建任务）/ sasu-event（流转）
+   - 积分不需要账本：验收通过事件即积分入账，统计时从事件流推导
+   ============================================================ */
+var API_GET_ALL = 'https://quickform.cn/api/uu810fv5nl/all';
+var API_COUNT   = 'https://quickform.cn/api/uu810fv5nl/count';
+var API_POST    = 'https://quickform.cn/api/uu810fv5nl';
+var SOURCE      = 'campus-tasks-onefile';
+var FORM_TYPE   = '校园任务平台';
+var SCHEMA      = '1.0';
+/* 身份说明：与老师实例一致，采用实名自填（无口令）——单文件源码人人可读，
+   前端口令无安全意义；敏感操作依赖操作留痕（每条记录带操作人）+ 老师后台清理兜底 */
+var POLL_MS     = 10000;
+
+var CATS = ['校园服务','宣传设计','技术支持','卫生劳动','活动协助','其他'];
+var STATUS_META = {
+  pricing:   {label:'待定价', emoji:'⏳', cls:'st-pricing'},
+  open:      {label:'招募中', emoji:'📣', cls:'st-open'},
+  full:      {label:'已满',   emoji:'🧑‍🤝‍🧑', cls:'st-full'},
+  reviewing: {label:'验收中', emoji:'📋', cls:'st-review'},
+  completed: {label:'已完成', emoji:'✅', cls:'st-completed'},
+  cancelled: {label:'已取消', emoji:'🚫', cls:'st-cancelled'},
+  dead:      {label:'已截止', emoji:'⏰', cls:'st-dead'}
+};
+var ROLE_LABEL = {STUDENT:'学生', TEACHER:'教师', ADMIN:'管理员'};
+var ROLE_PERMS = {
+  STUDENT:['publish-hidden'], TEACHER:['publish','manage','review-own'], ADMIN:['publish','manage','review-all','price']
+};
+
+/* ---------- 全局状态 ---------- */
+var ME = null;            /* {role, name} */
+var RAW = [];             /* 过滤后的原始记录（sasu-*） */
+var TASKS = [];           /* 推导后的任务对象数组（按 created_ts 倒序） */
+var BY_ID = {};           /* task_id -> task 对象 */
+var POSTING = false;
+var hallCat = '全部';
+var hallKw = '';
+var activeTab = 'hall';
+var lastCount = null;
+
+/* ---------- 工具 ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function fmtTs(ts){ var d=new Date(ts); return d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function fmtShort(ts){ var d=new Date(ts); return pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function makeTaskId(){ var d=new Date();
+  return 'T'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds())
+    +'-'+Math.random().toString(36).slice(2,6).toUpperCase(); }
+function deviceId(){
+  var id='';
+  try{ id=localStorage.getItem('sasu_device_id')||''; }catch(e){}
+  if(!id){ id='dev-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+    try{ localStorage.setItem('sasu_device_id',id); }catch(e){} }
+  return id;
+}
+function setConn(kind, text){
+  var el=$('conn'); el.className='conn '+kind;
+  el.querySelector('.txt').textContent=text;
+}
+function notice(kind, html){
+  var el=$('pubNotice'); el.className='notice show '+kind; el.innerHTML=html;
+}
+function clearNotice(){ var el=$('pubNotice'); el.className='notice'; el.innerHTML=''; }
+
+/* ---------- 数据层：拉取 + 推导 ---------- */
+function fetchAll(){
+  return fetch(API_GET_ALL + '?_=' + Date.now(), {cache:'no-store', headers:{'Accept':'application/json'}})
+    .then(function(res){ if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
+    .then(function(data){ return (data && data.submissions) || []; });
+}
+function isMine(r){
+  return r && (r.record_type === 'sasu-task' || r.record_type === 'sasu-event')
+    && r.form_type === FORM_TYPE && !r.__probe;
+}
+/* 把事件流推导成任务对象 */
+function derive(records){
+  var tasks = {};
+  for (var i=0;i<records.length;i++){
+    var r = records[i];
+    if (r.record_type === 'sasu-task'){
+      if (!tasks[r.task_id]) tasks[r.task_id] = { info:r, events:[], id:r.task_id };
+      else tasks[r.task_id].info = r;   /* 同 id 重复以最后一条为准 */
+    } else if (r.record_type === 'sasu-event'){
+      if (!tasks[r.task_id]) tasks[r.task_id] = { info:null, events:[], id:r.task_id };
+      tasks[r.task_id].events.push(r);
+    }
+  }
+  var out = [];
+  for (var id in tasks){
+    var t = tasks[id];
+    if (!t.info) continue;   /* 只有事件没有任务主记录（异常），忽略 */
+    t.events.sort(function(a,b){ return (a.event_ts||0) - (b.event_ts||0); });
+    var st = t.info.status || 'pricing';       /* 初始：待定价 */
+    var claims = {};                            /* claimer -> {status, events[], ts} */
+    var timeline = [{ ts:t.info.created_ts||0, text:'任务创建（待管理员定价上架）', by:t.info.creator, emoji:'📝' }];
+    for (var j=0;j<t.events.length;j++){
+      var e = t.events[j];
+      var prev = st;
+      if (e.event_type === 'priced'){
+        if (st === 'pricing') st = 'open';
+        if (e.reward) t.info.reward = e.reward;   /* 定价可修正积分 */
+        timeline.push({ts:e.event_ts, text:'管理员定价 '+ (e.reward||t.info.reward) +' 积分/人，上架招募', by:e.operator, emoji:'🏷️'});
+      } else if (e.event_type === 'claimed'){
+        if (!claims[e.claimer]) claims[e.claimer] = {status:'claimed', events:[], ts:e.event_ts};
+        if (claims[e.claimer].status === 'claimed') continue;   /* 重复接单忽略 */
+        claims[e.claimer] = {status:'claimed', events:[], ts:e.event_ts};
+        timeline.push({ts:e.event_ts, text:e.claimer+' 认领了任务', by:e.claimer, emoji:'🙋'});
+      } else if (e.event_type === 'submitted'){
+        if (claims[e.claimer]) claims[e.claimer].status = 'submitted';
+        if (st === 'open' || st === 'full') st = 'reviewing';
+        timeline.push({ts:e.event_ts, text:e.claimer+' 提交了成果'+(e.note?('：'+e.note):''), by:e.claimer, emoji:'📨'});
+      } else if (e.event_type === 'accepted'){
+        if (claims[e.claimer]) claims[e.claimer].status = 'accepted';
+        timeline.push({ts:e.event_ts, text:'验收通过：'+e.claimer+' 获得 '+ (e.reward||t.info.reward) +' 积分', by:e.operator, emoji:'✅'});
+      } else if (e.event_type === 'rejected'){
+        if (claims[e.claimer]) claims[e.claimer].status = 'rejected';
+        timeline.push({ts:e.event_ts, text:'验收驳回：'+e.claimer+(e.note?('（'+e.note+'）'):''), by:e.operator, emoji:'↩️'});
+      } else if (e.event_type === 'cancelled'){
+        st = 'cancelled';
+        timeline.push({ts:e.event_ts, text:'任务被取消'+(e.note?('：'+e.note):''), by:e.operator, emoji:'🚫'});
+      }
+      (void prev);
+    }
+    var vals = Object.keys(claims).map(function(k){ return claims[k]; });
+    var acceptedCount = vals.filter(function(c){ return c.status==='accepted'; }).length;
+    var submittedCount = vals.filter(function(c){ return c.status==='submitted'; }).length;
+    if (st !== 'cancelled' && st !== 'pricing'){
+      var claimedCount = vals.length;
+      var head = Number(t.info.headcount) || 1;
+      if (acceptedCount >= head) st = 'completed';
+      else if (claimedCount >= head) st = (submittedCount > 0 ? 'reviewing' : 'full');
+      else if (submittedCount > 0) st = 'reviewing';
+      else st = 'open';
+    }
+    /* 截止时间推导（招募中且过期 → 已截止） */
+    var dead = false;
+    if (t.info.deadline_ts && Date.now() > t.info.deadline_ts && (st === 'open' || st === 'full' || st === 'reviewing')){
+      dead = true;
+    }
+    var totalPoints = acceptedCount * (Number(t.info.reward)||0);
+    t.status = st;
+    t.dead = dead;
+    t.claims = claims;
+    t.timeline = timeline;
+    t.acceptedCount = acceptedCount;
+    t.claimedCount = vals.length;
+    t.totalPoints = totalPoints;
+    t.creator = t.info.creator;
+    t.title = t.info.title || '(无标题)';
+    out.push(t);
+  }
+  out.sort(function(a,b){ return (b.info.created_ts||0) - (a.info.created_ts||0); });
+  return out;
+}
+function refresh(parseOnly){
+  return fetchAll().then(function(all){
+    RAW = all.filter(isMine);
+    TASKS = derive(RAW);
+    BY_ID = {};
+    TASKS.forEach(function(t){ BY_ID[t.id] = t; });
+    renderHero();
+    renderCurrent();
+    if (!parseOnly) setConn('ok', '已连接 QuickForm 数据源 · 共 '+RAW.length+' 条记录');
+  }).catch(function(err){
+    if (!parseOnly) setConn('err', '连接失败：'+ (err.message||'网络异常'));
+  });
+}
+function pollLoop(){
+  fetch(API_COUNT, {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (d && typeof d.total_submissions === 'number' && lastCount !== null && d.total_submissions !== lastCount){
+        refresh();   /* 有新提交 → 全量刷新 */
+      }
+      if (d && typeof d.total_submissions === 'number') lastCount = d.total_submissions;
+    }).catch(function(){});
+}
+function startPolling(){
+  fetchAll().then(function(){ /* 首次成功后记录 count 基准 */
+    return fetch(API_COUNT,{cache:'no-store'}).then(function(r){return r.json();});
+  }).then(function(d){ if(d) lastCount = d.total_submissions; }).catch(function(){});
+  setInterval(function(){ pollLoop(); }, POLL_MS);
+}
+
+/* ---------- 写入层 ---------- */
+function postEvent(payload){
+  if (POSTING) return Promise.reject(new Error('已有操作正在进行，请稍候'));
+  POSTING = true;
+  return fetch(API_POST, {method:'POST', headers:{
+      'Content-Type':'application/json','Accept':'application/json',
+      'X-QuickForm-Device-ID': deviceId()},
+    body: JSON.stringify(payload)})
+    .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){
+      if (!res.ok) throw new Error(j.message || ('HTTP '+res.status));
+      if (j.status && j.status !== 'success') throw new Error(j.message || '提交未成功');
+      return j; });})
+    .then(function(j){
+      POSTING = false;
+      /* 乐观更新：/all 接口有数十秒快照延迟，POST 成功后先把记录并入本地，
+         下一次全量轮询拉到真实数据后自动对齐 */
+      RAW.push(payload);
+      TASKS = derive(RAW);
+      BY_ID = {};
+      TASKS.forEach(function(t){ BY_ID[t.id] = t; });
+      renderHero(); renderCurrent();
+      return j;
+    })
+    .catch(function(err){ POSTING = false; throw err; });
+}
+function pushTaskEvent(taskId, eventType, extra){
+  var payload = {
+    record_type:'sasu-event', task_id:taskId, event_type:eventType,
+    operator:ME.name, role:ME.role, event_ts:Date.now(),
+    schema_version:SCHEMA, source:SOURCE, form_type:FORM_TYPE
+  };
+  for (var k in (extra||{})) payload[k] = extra[k];
+  return postEvent(payload);
+}
+
+/* ---------- 渲染：壳 ---------- */
+function statusBadge(st, dead){
+  var meta = STATUS_META[st] || STATUS_META.pricing;
+  if (dead && (st==='open'||st==='full'||st==='reviewing')) meta = STATUS_META.dead;
+  return '<span class="st '+meta.cls+'">'+meta.emoji+' '+meta.label+'</span>';
+}
+function claimBadge(s){
+  var map = {claimed:['🙌 已认领','st-claimed'], submitted:['📨 已提交','st-submitted'],
+    accepted:['✅ 已通过','st-accepted'], rejected:['↩️ 被驳回','st-rejected']};
+  var m = map[s] || map.claimed;
+  return '<span class="st '+m[1]+'">'+m[0]+'</span>';
+}
+function roleChip(){
+  var who = $('whoamiSlot');
+  if (!ME){ who.innerHTML=''; return; }
+  who.innerHTML = '<span class="whoami"><span class="avatar">'+esc(ME.name.slice(0,1))+'</span>'
+    + '<b>'+esc(ME.name)+'</b><span class="rl">'+ROLE_LABEL[ME.role]+'</span>'
+    + '<button id="btnSwitch" title="切换身份">切换</button></span>';
+  $('btnSwitch').onclick = function(){ showRoleMask(true); };
+}
+function renderHero(){
+  var total = TASKS.length;
+  var open = TASKS.filter(function(t){ return t.status==='open' && !t.dead; }).length;
+  var done = TASKS.filter(function(t){ return t.status==='completed'; }).length;
+  var pts = TASKS.reduce(function(a,t){ return a + t.totalPoints; }, 0);
+  $('hsTasks').textContent = total; $('hsOpen').textContent = open;
+  $('hsDone').textContent = done; $('hsPoints').textContent = pts;
+}
+function canPublish(){ return ME && (ME.role==='TEACHER' || ME.role==='ADMIN'); }
+function canManage(){ return ME && (ME.role==='TEACHER' || ME.role==='ADMIN'); }
+function canPrice(){ return ME && ME.role==='ADMIN'; }
+
+/* ---------- 渲染：任务大厅 ---------- */
+function renderHall(){
+  var list = TASKS.filter(function(t){
+    if (t.status === 'cancelled' && t.status !== 'open') { /* 已取消的只保留在管理视图 */ }
+    if (hallCat !== '全部' && t.info.category !== hallCat) return false;
+    if (t.status === 'pricing') return false;           /* 未上架不进大厅 */
+    if (hallKw){
+      var kw = hallKw.toLowerCase();
+      if (t.title.toLowerCase().indexOf(kw) < 0 && String(t.info.description||'').toLowerCase().indexOf(kw) < 0
+        && String(t.creator||'').toLowerCase().indexOf(kw) < 0) return false;
+    }
+    return true;
+  });
+  var html = '';
+  if (list.length === 0){
+    html = '<div class="empty" style="grid-column:1/-1"><div class="big">📭</div>该筛选条件下暂无任务</div>';
+  }
+  for (var i=0;i<list.length;i++){
+    var t = list[i];
+    var head = Number(t.info.headcount)||1;
+    var dead = t.dead;
+    var canClaim = ME && ME.role==='STUDENT' && t.status==='open' && !dead && !t.claims[ME.name];
+    var joined = ME && t.claims[ME.name];
+    html += '<div class="card tcard">'
+      + '<div class="t-top">'+statusBadge(t.status, t.dead)+'<span class="cat-tag">'+esc(t.info.category||'其他')+'</span>'
+      + '<span class="muted num" style="font-size:11.5px;margin-left:auto">'+esc(t.id)+'</span></div>'
+      + '<h3>'+esc(t.title)+'</h3>'
+      + '<div class="desc">'+esc(t.info.description||'')+'</div>'
+      + '<div class="meta"><span>👤 '+esc(t.creator)+'</span><span>⏰ 截止 '+fmtTs(t.info.deadline_ts)+'</span></div>'
+      + '<div class="foot"><div class="reward">'+(Number(t.info.reward)||0)+'<small> 积分/人</small></div>'
+      + '<div class="prow"><div class="progress"><i style="width:'+Math.min(100, Math.round(t.claimedCount/head*100))+'%"></i></div>'
+      + '<span class="num">'+t.claimedCount+'/'+head+' 人</span>'
+      + (canClaim ? '<button class="btn btn-sm btn-primary" data-claim="'+esc(t.id)+'">认领</button>' : '')
+      + (joined ? '<span class="st '+claimBadge(t.claims[ME.name].status).match(/st-\\S+/)[0]+'">'+claimBadge(t.claims[ME.name].status)+'</span>' : '')
+      + '</div></div></div>';
+  }
+  $('hallList').innerHTML = html;
+  var btns = $('hallList').querySelectorAll('[data-claim]');
+  for (var b=0;b<btns.length;b++){
+    btns[b].onclick = (function(id){ return function(){ doClaim(id); }; })(btns[b].getAttribute('data-claim'));
+  }
+}
+
+/* ---------- 渲染：我的面板 ---------- */
+function renderMine(){
+  var box = $('view-mine');
+  if (!ME){ box.innerHTML = '<div class="empty"><div class="big">🔐</div>请先选择身份</div>'; return; }
+  var html = '';
+  if (ME.role === 'STUDENT'){
+    var mine = TASKS.filter(function(t){ return t.claims[ME.name]; });
+    var myPoints = mine.reduce(function(a,t){
+      return a + (t.claims[ME.name].status === 'accepted' ? (Number(t.info.reward)||0) : 0); }, 0);
+    html += '<div class="panel"><div class="panel-h"><span>👋 '+esc(ME.name)+'，你已认领 '+mine.length+' 个任务</span>'
+      + '<span class="reward" style="font-size:17px">累计获得 '+myPoints+' 积分</span></div><div class="panel-b">';
+    if (mine.length === 0){
+      html += '<div class="empty">还没有认领任务，去<a href="#" data-gotab="hall">任务大厅</a>看看吧</div>';
+    }
+    for (var i=0;i<mine.length;i++){
+      var t = mine[i]; var c = t.claims[ME.name];
+      html += '<div class="task-line"><div class="tl"><div><h4>'+statusBadge(t.status,t.dead)+' '+esc(t.title)+'</h4>'
+        + '<div class="m"><span>👤 '+esc(t.creator)+'</span><span>🏷️ '+esc(t.info.category||'')+'</span>'
+        + '<span>💰 '+ (Number(t.info.reward)||0) +' 积分/人</span><span>⏰ 截止 '+fmtTs(t.info.deadline_ts)+'</span></div></div>'
+        + '<div>'+claimBadge(c.status)+'</div></div>'
+        + '<div class="claims"><div class="claim-row"><span class="muted">我的进度：</span>'
+        + (c.status==='claimed' ? '<button class="btn btn-sm btn-primary" data-submit="'+esc(t.id)+'">提交成果</button>'
+            + '<span class="muted">提交后教师将进行验收</span>' : '')
+        + (c.status==='submitted' ? '<span class="muted">已提交，等待教师验收…</span>' : '')
+        + (c.status==='accepted' ? '<b style="color:var(--green)">🎉 验收通过，+'+(Number(t.info.reward)||0)+' 积分</b>' : '')
+        + (c.status==='rejected' ? '<span style="color:var(--red)">被驳回：'+esc(rejectReasonOf(t.id,ME.name))+'</span>'
+            + '<button class="btn btn-sm btn-primary" data-submit="'+esc(t.id)+'">重新提交</button>' : '')
+        + '</div></div></div>';
+    }
+    html += '</div></div>';
+  } else if (ME.role === 'TEACHER'){
+    var mine2 = TASKS.filter(function(t){ return t.creator === ME.name; });
+    var waitReview = 0;
+    mine2.forEach(function(t){ Object.keys(t.claims).forEach(function(k){ if (t.claims[k].status==='submitted') waitReview++; }); });
+    html += '<div class="panel"><div class="panel-h"><span>📖 '+esc(ME.name)+' 老师发布了 '+mine2.length+' 个任务 · 待验收 '+waitReview+' 项</span>'
+      + '<button class="btn btn-sm btn-primary" data-gotab="publish">＋ 发布新任务</button></div><div class="panel-b">';
+    if (mine2.length === 0) html += '<div class="empty">还没有发布过任务，点击右上角「发布新任务」开始</div>';
+    for (var j=0;j<mine2.length;j++){ html += renderManageLine(mine2[j], true); }
+    html += '</div></div>';
+  } else {
+    var pricing = TASKS.filter(function(t){ return t.status === 'pricing'; });
+    html += '<div class="panel"><div class="panel-h"><span>🛡️ 管理员视图 · 待定价 '+pricing.length+' 个</span></div><div class="panel-b">';
+    if (pricing.length === 0) html += '<div class="empty">没有待定价的任务</div>';
+    for (var k=0;k<pricing.length;k++){
+      var t3 = pricing[k];
+      html += '<div class="task-line"><div class="tl"><div><h4>'+esc(t3.title)+'</h4>'
+        + '<div class="m"><span>👤 '+esc(t3.creator)+'</span><span>🏷️ '+esc(t3.info.category||'')+'</span>'
+        + '<span>📝 建议积分 '+ (Number(t3.info.reward)||0) +'/人 · '+ (Number(t3.info.headcount)||1) +' 人</span></div>'
+        + '<div class="desc" style="margin-top:6px">'+esc(t3.info.description||'')+'</div></div>'
+        + '<button class="btn btn-sm btn-primary" data-price="'+esc(t3.id)+'">定价上架</button></div></div>';
+    }
+    html += '</div></div>';
+  }
+  box.innerHTML = html;
+  bindCommon(box);
+}
+function rejectReasonOf(taskId, who){
+  var t = BY_ID[taskId]; if (!t) return '';
+  for (var i=t.events.length-1;i>=0;i--){
+    var e = t.events[i];
+    if (e.event_type==='rejected' && e.claimer===who && e.note) return e.note;
+  }
+  return '未通过验收';
+}
+
+/* ---------- 渲染：任务管理 ---------- */
+function renderManageLine(t, isOwnerView){
+  var head = Number(t.info.headcount)||1;
+  var canReview = ME && (ME.role==='ADMIN' || (ME.role==='TEACHER' && t.creator===ME.name));
+  var html = '<div class="task-line"><div class="tl"><div><h4>'+statusBadge(t.status,t.dead)+' '+esc(t.title)
+    + '<span class="muted num" style="font-size:11.5px;margin-left:8px">'+esc(t.id)+'</span></h4>'
+    + '<div class="m"><span>👤 发布人 '+esc(t.creator)+'</span><span>🏷️ '+esc(t.info.category||'')+'</span>'
+    + '<span>💰 '+ (Number(t.info.reward)||0) +' 积分/人</span><span>🧑‍🤝‍🧑 '+t.claimedCount+'/'+head+' 人</span>'
+    + '<span>⏰ 截止 '+fmtTs(t.info.deadline_ts)+'</span></div></div>'
+    + '<div style="display:flex;gap:7px;flex-shrink:0;align-items:center">'
+    + (canPrice() && t.status==='pricing' ? '<button class="btn btn-sm btn-primary" data-price="'+esc(t.id)+'">定价上架</button>' : '')
+    + (canManage() && (t.status==='open'||t.status==='full'||t.status==='reviewing') && !t.dead
+        ? '<button class="btn btn-sm btn-ghost" data-cancel="'+esc(t.id)+'">取消任务</button>' : '')
+    + '</div></div>'
+    + '<div class="desc" style="margin-top:6px;color:var(--muted);font-size:13px">'+esc(t.info.description||'')+'</div>';
+  /* 接单人明细 + 验收操作 */
+  var keys = Object.keys(t.claims);
+  if (keys.length > 0){
+    html += '<div class="claims">';
+    for (var i=0;i<keys.length;i++){
+      var who = keys[i]; var c = t.claims[who];
+      html += '<div class="claim-row"><span class="who">'+esc(who)+'</span>'+claimBadge(c.status)
+        + '<span class="muted num">'+fmtShort(c.ts)+'</span>';
+      if (canReview && c.status === 'submitted'){
+        html += '<button class="btn btn-sm btn-primary" data-accept="'+esc(t.id)+'|'+esc(who)+'">验收通过</button>'
+          + '<button class="btn btn-sm btn-ghost" data-reject="'+esc(t.id)+'|'+esc(who)+'">驳回</button>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  /* 时间线 */
+  html += '<ul class="tline">';
+  for (var k=t.timeline.length-1;k>=0;k--){
+    var ev = t.timeline[k];
+    html += '<li><b>'+ev.emoji+' '+esc(ev.text)+'</b> · '+esc(ev.by||'')+' · '+fmtShort(ev.ts)+'</li>';
+  }
+  html += '</ul></div>';
+  return html;
+}
+function renderManage(){
+  var box = $('view-manage');
+  if (!canManage()){
+    box.innerHTML = '<div class="empty"><div class="big">🔐</div>任务管理仅教师和管理员可见</div>';
+    return;
+  }
+  var list = TASKS.slice();
+  var html = '<div class="panel"><div class="panel-h"><span>全部任务 '+list.length+' 个</span>'
+    + '<button class="btn btn-sm btn-primary" data-gotab="publish">＋ 发布新任务</button></div><div class="panel-b">';
+  if (list.length === 0) html += '<div class="empty">暂无任务，发布第一个吧</div>';
+  for (var i=0;i<list.length;i++) html += renderManageLine(list[i], false);
+  html += '</div></div>';
+  box.innerHTML = html;
+  bindCommon(box);
+}
+
+/* ---------- 渲染：统计 ---------- */
+function renderStats(){
+  var box = $('view-stats');
+  var bySt = {};
+  TASKS.forEach(function(t){ bySt[t.status] = (bySt[t.status]||0)+1; });
+  var stRows = '';
+  ['pricing','open','full','reviewing','completed','cancelled','dead'].forEach(function(s){
+    if (bySt[s]) stRows += '<div class="claim-row"><span style="min-width:88px">'+statusBadge(s,false)+'</span>'
+      + '<b class="num">'+bySt[s]+'</b> 个任务</div>';
+  });
+  /* 积分榜 */
+  var scores = {};
+  TASKS.forEach(function(t){
+    Object.keys(t.claims).forEach(function(who){
+      if (t.claims[who].status === 'accepted'){
+        scores[who] = (scores[who]||0) + (Number(t.info.reward)||0);
+      }
+    });
+  });
+  var rank = Object.keys(scores).map(function(k){ return {who:k, pts:scores[k]}; })
+    .sort(function(a,b){ return b.pts - a.pts; });
+  var rankHtml = '';
+  for (var i=0;i<rank.length;i++){
+    rankHtml += '<div class="claim-row"><span class="who">#'+(i+1)+' '+esc(rank[i].who)+'</span>'
+      + '<b class="reward" style="font-size:15px">'+rank[i].pts+' 积分</b></div>';
+  }
+  box.innerHTML = '<div class="grid" style="margin-top:16px">'
+    + '<div class="card"><h3 style="margin:0 0 10px">📊 任务状态分布</h3>'
+    + (stRows || '<div class="empty">暂无任务</div>') + '</div>'
+    + '<div class="card"><h3 style="margin:0 0 10px">🏆 学生积分榜</h3>'
+    + (rankHtml || '<div class="empty">暂无积分记录</div>') + '</div>'
+    + '<div class="card" style="grid-column:1/-1"><h3 style="margin:0 0 10px">🧾 原始数据</h3>'
+    + '<p class="muted" style="margin:0 0 10px">追加式事件日志共 '+RAW.length+' 条记录。点击页面底部「导出全部数据 JSON」可备份。</p></div>'
+    + '</div>';
+}
+
+/* ---------- 操作 ---------- */
+function doClaim(taskId){
+  if (!ME || ME.role !== 'STUDENT'){ alert('请先切换为学生身份再认领'); return; }
+  var t = BY_ID[taskId]; if (!t) return;
+  if (!confirm('确认认领「'+t.title+'」？认领后需按时提交成果。')) return;
+  pushTaskEvent(taskId, 'claimed', {claimer:ME.name})
+    .then(function(){ renderCurrent(); })
+    .catch(function(err){ alert('认领失败：'+err.message); });
+}
+function doSubmit(taskId){
+  var note = prompt('填写成果说明（做了什么、完成情况）：');
+  if (note === null) return;
+  if (!note.trim()){ alert('成果说明不能为空'); return; }
+  pushTaskEvent(taskId, 'submitted', {claimer:ME.name, note:note.trim().slice(0,300)})
+    .then(function(){ renderCurrent(); alert('已提交，等待教师验收'); })
+    .catch(function(err){ alert('提交失败：'+err.message); });
+}
+function doAccept(taskId, who){
+  var t = BY_ID[taskId]; if (!t) return;
+  if (!confirm('确认「'+who+'」验收通过？通过后其账户将获得 '+ (Number(t.info.reward)||0) +' 积分。')) return;
+  pushTaskEvent(taskId, 'accepted', {claimer:who, reward:Number(t.info.reward)||0})
+    .then(function(){ renderCurrent(); })
+    .catch(function(err){ alert('验收失败：'+err.message); });
+}
+function doReject(taskId, who){
+  var reason = prompt('填写驳回理由（学生可看到并重新提交）：');
+  if (reason === null) return;
+  if (!reason.trim()){ alert('驳回理由不能为空'); return; }
+  pushTaskEvent(taskId, 'rejected', {claimer:who, note:reason.trim().slice(0,200)})
+    .then(function(){ renderCurrent(); })
+    .catch(function(err){ alert('驳回失败：'+err.message); });
+}
+function doPrice(taskId){
+  var t = BY_ID[taskId]; if (!t) return;
+  var v = prompt('定价：每人的积分（正整数，教师建议 '+(Number(t.info.reward)||0)+' 分）', t.info.reward);
+  if (v === null) return;
+  var n = parseInt(v, 10);
+  if (!Number.isInteger(n) || n <= 0){ alert('积分需为正整数'); return; }
+  pushTaskEvent(taskId, 'priced', {reward:n})
+    .then(function(){ renderCurrent(); alert('已定价上架，任务进入招募中'); })
+    .catch(function(err){ alert('定价失败：'+err.message); });
+}
+function doCancel(taskId){
+  var reason = prompt('确认取消该任务？填写取消原因：');
+  if (reason === null) return;
+  pushTaskEvent(taskId, 'cancelled', {note:reason.trim().slice(0,200)})
+    .then(function(){ renderCurrent(); })
+    .catch(function(err){ alert('取消失败：'+err.message); });
+}
+
+/* ---------- 发布任务 ---------- */
+function submitPublish(){
+  clearNotice();
+  var title = $('pTitle').value.trim();
+  var catEl = document.querySelector('input[name="pcat"]:checked');
+  var cat = catEl ? catEl.value : '';
+  var desc = $('pDesc').value.trim();
+  var count = parseInt($('pCount').value, 10);
+  var reward = parseInt($('pReward').value, 10);
+  var deadline = $('pDeadline').value;
+  var ok = true;
+  function flag(id, bad){ $(id).className = 'err' + (bad ? ' show' : ''); if (bad) ok = false; }
+  flag('eTitle', !title);
+  flag('eCat', !cat);
+  flag('eDesc', desc.length < 10);
+  flag('eCount', !Number.isInteger(count) || count < 1 || count > 50);
+  flag('eReward', !Number.isInteger(reward) || reward <= 0 || reward > 1000);
+  var dl = deadline ? new Date(deadline) : null;
+  flag('eDead', !dl || isNaN(dl.getTime()) || dl.getTime() <= Date.now());
+  if (!ok || POSTING) return;
+  var btn = $('btnPublish'); btn.disabled = true; btn.textContent = '发布中…';
+  var id = makeTaskId();
+  postEvent({
+    record_type:'sasu-task', task_id:id, title:title, category:cat, description:desc,
+    headcount:count, reward:reward, deadline_ts:dl.getTime(), deadline_text:deadline,
+    creator:ME.name, created_ts:Date.now(), status:'pricing',
+    schema_version:SCHEMA, source:SOURCE, form_type:FORM_TYPE
+  }).then(function(){
+    btn.disabled = false; btn.textContent = '发布任务（提交后管理员定价上架）';
+    notice('ok', '✅ 任务已发布（编号 <b>'+esc(id)+'</b>），等待管理员定价上架。');
+    $('pTitle').value=''; $('pDesc').value=''; $('pCount').value='1';
+    switchTab('mine');
+    renderMine();
+  }).catch(function(err){
+    btn.disabled = false; btn.textContent = '发布任务（提交后管理员定价上架）';
+    notice('err', '❌ 发布失败：'+esc(err.message||'网络异常')+'<br>填写内容已保留，可直接重试。');
+  });
+}
+
+/* ---------- 导出 ---------- */
+function exportJson(){
+  var blob = new Blob([JSON.stringify({exported_at:new Date().toISOString(),
+    device:deviceId(), total:RAW.length, records:RAW}, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'campus-tasks-export-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- 身份 ---------- */
+function showRoleMask(allowCancel){
+  $('roleMask').hidden = false;
+  $('roleMask').dataset.cancelable = allowCancel ? '1' : '';
+  if (ME){ $('roleName').value = ME.name; selectRole(ME.role); }
+}
+function selectRole(role){
+  var cards = $('roleCards').children;
+  for (var i=0;i<cards.length;i++) cards[i].className = 'role-card' + (cards[i].dataset.role===role ? ' on' : '');
+  $('adminPwdRow').hidden = role !== 'ADMIN';
+}
+function confirmRole(){
+  var name = $('roleName').value.trim();
+  var on = document.querySelector('#roleCards .role-card.on');
+  var role = on ? on.dataset.role : '';
+  if (!name){ $('eRoleName').className='err show'; return; }
+  ME = {role:role, name:name};
+  try{ localStorage.setItem('sasu_me', JSON.stringify(ME)); }catch(e){}
+  $('roleMask').hidden = true;
+  roleChip(); renderCurrent();
+}
+function loadMe(){
+  try{
+    var v = localStorage.getItem('sasu_me');
+    if (v){ ME = JSON.parse(v); if (!ME || !ME.role || !ME.name) ME = null; }
+  }catch(e){}
+}
+
+/* ---------- Tab 与渲染调度 ---------- */
+function switchTab(tab){
+  activeTab = tab;
+  var ids = ['hall','mine','manage','stats','publish'];
+  for (var i=0;i<ids.length;i++){
+    $('view-'+ids[i]).hidden = (ids[i] !== tab);
+  }
+  var tabs = $('tabs').children;
+  for (var j=0;j<tabs.length;j++){
+    var key = tabs[j].dataset.tab;
+    if (key){
+      tabs[j].className = 'tab' + (key===tab ? ' on' : '');
+      tabs[j].hidden = false;
+      /* 权限：任务管理仅教师/管理员；发布仅教师/管理员 */
+      if (key==='manage' && !canManage()) tabs[j].hidden = true;
+      if (key==='publish' && !canPublish()) tabs[j].hidden = true;
+    }
+  }
+  renderCurrent();
+}
+function renderCurrent(){
+  roleChip();
+  if (activeTab === 'hall') renderHall();
+  else if (activeTab === 'mine') renderMine();
+  else if (activeTab === 'manage') renderManage();
+  else if (activeTab === 'stats') renderStats();
+}
+function bindCommon(root){
+  var els = root.querySelectorAll('[data-gotab]');
+  for (var i=0;i<els.length;i++){
+    els[i].onclick = (function(tab){ return function(e){ e.preventDefault(); switchTab(tab); }; })(els[i].getAttribute('data-gotab'));
+  }
+  var subs = root.querySelectorAll('[data-submit]');
+  for (var s=0;s<subs.length;s++){
+    subs[s].onclick = (function(id){ return function(){ doSubmit(id); }; })(subs[s].getAttribute('data-submit'));
+  }
+  var accs = root.querySelectorAll('[data-accept]');
+  for (var a=0;a<accs.length;a++){
+    accs[a].onclick = (function(v){ return function(){ var p=v.split('|'); doAccept(p[0], p[1]); }; })(accs[a].getAttribute('data-accept'));
+  }
+  var rjs = root.querySelectorAll('[data-reject]');
+  for (var r=0;r<rjs.length;r++){
+    rjs[r].onclick = (function(v){ return function(){ var p=v.split('|'); doReject(p[0], p[1]); }; })(rjs[r].getAttribute('data-reject'));
+  }
+  var pcs = root.querySelectorAll('[data-price]');
+  for (var p=0;p<pcs.length;p++){
+    pcs[p].onclick = (function(id){ return function(){ doPrice(id); }; })(pcs[p].getAttribute('data-price'));
+  }
+  var ccs = root.querySelectorAll('[data-cancel]');
+  for (var c=0;c<ccs.length;c++){
+    ccs[c].onclick = (function(id){ return function(){ doCancel(id); }; })(ccs[c].getAttribute('data-cancel'));
+  }
+}
+
+/* ---------- 初始化 ---------- */
+(function init(){
+  loadMe();
+  if (ME){ roleChip(); }
+  else { showRoleMask(false); }
+  /* Tab 切换 */
+  var tabs = $('tabs').children;
+  for (var i=0;i<tabs.length;i++){
+    tabs[i].onclick = (function(el){ return function(){ switchTab(el.dataset.tab); }; })(tabs[i]);
+  }
+  /* 大厅筛选 */
+  var chips = document.querySelectorAll('#view-hall .chip');
+  for (var c=0;c<chips.length;c++){
+    chips[c].onclick = (function(el){ return function(){
+      hallCat = el.dataset.cat;
+      for (var k=0;k<chips.length;k++) chips[k].className = 'chip' + (chips[k]===el ? ' on' : '');
+      renderHall();
+    }; })(chips[c]);
+  }
+  $('hallSearch').addEventListener('input', function(){ hallKw = this.value.trim(); renderHall(); });
+  /* 身份 */
+  var rc = $('roleCards').children;
+  for (var r=0;r<rc.length;r++){
+    rc[r].onclick = (function(el){ return function(){ selectRole(el.dataset.role); }; })(rc[r]);
+  }
+  $('btnRoleOk').onclick = confirmRole;
+  $('btnRefresh').onclick = function(){ refresh(); };
+  $('btnExport').onclick = function(e){ e.preventDefault(); exportJson(); };
+  $('btnPublish').onclick = submitPublish;
+  $('pDeadline').value = (function(){ var d=new Date(Date.now()+7*86400000);
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':00'; })();
+  /* 分类 chips 单选样式 */
+  var pc = document.querySelectorAll('#pCats label');
+  for (var q=0;q<pc.length;q++){
+    pc[q].addEventListener('click', function(){
+      for (var w=0;w<pc.length;w++) pc[w].className = 'chip';
+      this.className = 'chip on';
+      this.querySelector('input').checked = true;
+    });
+  }
+  document.querySelector('#pCats label').className = 'chip on';
+  document.querySelector('#pCats input').checked = true;
+  /* 首次拉取 + 轮询 */
+  refresh().then(function(){ startPolling(); });
+})();
+</script>
+</body>
+</html>
