@@ -158,3 +158,4 @@ docs/
 # 本地测试截图与临时文件
 /*.png
 *.log
+/.playwright-cli/
